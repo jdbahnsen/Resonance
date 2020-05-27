@@ -5,7 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\taglib-sharp\src\TaglibSharp\TaglibSharp.csproj" />
+    <PackageReference Include="TagLibSharp" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Resonance.Common\Resonance.Common.csproj" />
     <ProjectReference Include="..\Resonance.Data.Media.Common\Resonance.Data.Media.Common.csproj" />
   </ItemGroup>
