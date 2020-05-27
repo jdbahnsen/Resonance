@@ -17,7 +17,7 @@ namespace Resonance.Common
         public static string ComputeHash(string plainText, HashType hashType, byte[] saltBytes)
         {
             // If salt is not specified, generate it.
-            saltBytes = saltBytes ?? GenerateSalt();
+            saltBytes ??= GenerateSalt();
 
             // Convert plain text into a byte array.
             var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
@@ -37,31 +37,14 @@ namespace Resonance.Common
                 plainTextWithSaltBytes[plainTextBytes.Length + i] = saltBytes[i];
             }
 
-            HashAlgorithm hash;
-
-            // Initialize appropriate hashing algorithm class.
-            switch (hashType)
+            HashAlgorithm hash = hashType switch
             {
-                case HashType.SHA1:
-                    hash = Sha1.Value;
-                    break;
-
-                case HashType.SHA256:
-                    hash = Sha256.Value;
-                    break;
-
-                case HashType.SHA384:
-                    hash = Sha384.Value;
-                    break;
-
-                case HashType.SHA512:
-                    hash = Sha512.Value;
-                    break;
-
-                default:
-                    hash = Md5.Value;
-                    break;
-            }
+                HashType.SHA1 => Sha1.Value,
+                HashType.SHA256 => Sha256.Value,
+                HashType.SHA384 => Sha384.Value,
+                HashType.SHA512 => Sha512.Value,
+                _ => Md5.Value,
+            };
 
             // Compute hash value of our plain text with appended salt.
             var hashBytes = hash.ComputeHash(plainTextWithSaltBytes);
@@ -82,10 +65,9 @@ namespace Resonance.Common
             }
 
             // Convert result into a base64-encoded string.
-            var hashValue = Convert.ToBase64String(hashWithSaltBytes);
 
             // Return the result.
-            return hashValue;
+            return Convert.ToBase64String(hashWithSaltBytes);
         }
 
         public static byte[] GenerateSalt()
@@ -118,34 +100,16 @@ namespace Resonance.Common
         {
             var sb = new StringBuilder();
 
-            HashAlgorithm hashAlgorithm;
-
-            switch (hashType)
+            HashAlgorithm hashAlgorithm = hashType switch
             {
-                case HashType.SHA1:
-                    hashAlgorithm = Sha1.Value;
-                    break;
+                HashType.SHA1 => Sha1.Value,
+                HashType.SHA256 => Sha256.Value,
+                HashType.SHA384 => Sha384.Value,
+                HashType.SHA512 => Sha512.Value,
+                _ => Md5.Value,
+            };
 
-                case HashType.SHA256:
-                    hashAlgorithm = Sha256.Value;
-                    break;
-
-                case HashType.SHA384:
-                    hashAlgorithm = Sha384.Value;
-                    break;
-
-                case HashType.SHA512:
-                    hashAlgorithm = Sha512.Value;
-                    break;
-
-                default:
-                    hashAlgorithm = Md5.Value;
-                    break;
-            }
-
-            var result = hashAlgorithm.ComputeHash(bytes);
-
-            foreach (var b in result)
+            foreach (var b in hashAlgorithm.ComputeHash(bytes))
             {
                 sb.Append(b.ToString("x2"));
             }
@@ -160,7 +124,7 @@ namespace Resonance.Common
 
         public static string GetHash(this string value, HashType hashType, Encoding encoding = null)
         {
-            encoding = encoding ?? Encoding.UTF8;
+            encoding ??= Encoding.UTF8;
 
             return GetHash(encoding.GetBytes(value), hashType);
         }
@@ -170,32 +134,14 @@ namespace Resonance.Common
             // Convert base64-encoded hash value into a byte array.
             var hashWithSaltBytes = Convert.FromBase64String(hashValue);
 
-            // We must know size of hash (without salt).
-            int hashSizeInBits;
-
-            // Size of hash is based on the specified algorithm.
-            switch (hashType)
+            var hashSizeInBits = hashType switch
             {
-                case HashType.SHA1:
-                    hashSizeInBits = 160;
-                    break;
-
-                case HashType.SHA256:
-                    hashSizeInBits = 256;
-                    break;
-
-                case HashType.SHA384:
-                    hashSizeInBits = 384;
-                    break;
-
-                case HashType.SHA512:
-                    hashSizeInBits = 512;
-                    break;
-
-                default:
-                    hashSizeInBits = 128;
-                    break;
-            }
+                HashType.SHA1 => 160,
+                HashType.SHA256 => 256,
+                HashType.SHA384 => 384,
+                HashType.SHA512 => 512,
+                _ => 128,
+            };
 
             // Convert size of hash from bits to bytes.
             var hashSizeInBytes = hashSizeInBits / 8;

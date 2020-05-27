@@ -38,12 +38,11 @@ namespace Resonance.Common
 
             var stringBuilder = new StringBuilder();
 
-            using (var textWriter = new Utf8StringWriter(stringBuilder))
-            using (var xmlWriter = XmlWriter.Create(textWriter, XmlWriterSettings))
-            {
-                xmlSerializer.Serialize(xmlWriter, graph, xmlSerializerNamespaces);
-                return stringBuilder.ToString();
-            }
+            using var textWriter = new Utf8StringWriter(stringBuilder);
+            using var xmlWriter = XmlWriter.Create(textWriter, XmlWriterSettings);
+
+            xmlSerializer.Serialize(xmlWriter, graph, xmlSerializerNamespaces);
+            return stringBuilder.ToString();
         }
 
         private static XmlSerializer GetXmlSerializer(Type type)

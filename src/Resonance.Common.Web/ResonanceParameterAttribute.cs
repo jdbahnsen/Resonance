@@ -4,7 +4,7 @@ using System;
 namespace Resonance.Common.Web
 {
     [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property)]
-    public class ResonanceParameterAttribute : Attribute, IBindingSourceMetadata, IModelNameProvider
+    public sealed class ResonanceParameterAttribute : Attribute, IBindingSourceMetadata, IModelNameProvider
     {
         public BindingSource BindingSource => new BindingSource("resonance", "Resonance", IsGreedy, IsFromRequest);
 

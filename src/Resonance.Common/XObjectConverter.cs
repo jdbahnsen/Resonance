@@ -126,20 +126,13 @@ namespace Resonance.Common
 
         public static string ToDateTimeFormat(DateTimeKind kind)
         {
-            switch (kind)
+            return kind switch
             {
-                case DateTimeKind.Unspecified:
-                    return "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
-
-                case DateTimeKind.Utc:
-                    return "yyyy-MM-ddTHH:mm:ss.FFFFFFFZ";
-
-                case DateTimeKind.Local:
-                    return "yyyy-MM-ddTHH:mm:ss.FFFFFFFK";
-
-                default:
-                    throw CreateArgumentOutOfRangeException(nameof(kind), kind, "Unexpected DateTimeKind value.");
-            }
+                DateTimeKind.Unspecified => "yyyy-MM-ddTHH:mm:ss.FFFFFFF",
+                DateTimeKind.Utc => "yyyy-MM-ddTHH:mm:ss.FFFFFFFZ",
+                DateTimeKind.Local => "yyyy-MM-ddTHH:mm:ss.FFFFFFFK",
+                _ => throw CreateArgumentOutOfRangeException(nameof(kind), kind, "Unexpected DateTimeKind value."),
+            };
         }
     }
 
@@ -485,7 +478,7 @@ namespace Resonance.Common
             {
                 if (xmlNode1.NodeType == XmlNodeType.Element)
                 {
-                    xmlNodeList = xmlNodeList ?? new List<IXmlNode>();
+                    xmlNodeList ??= new List<IXmlNode>();
                     xmlNodeList.Add(xmlNode1);
                 }
             }
@@ -658,16 +651,14 @@ namespace Resonance.Common
                             }
                             if (num == 1 && WriteArrayAttribute)
                             {
-                                using (var enumerator = currentNode.ChildNodes.GetEnumerator())
+                                using var enumerator = currentNode.ChildNodes.GetEnumerator();
+                                while (enumerator.MoveNext())
                                 {
-                                    while (enumerator.MoveNext())
+                                    var current = enumerator.Current as IXmlElement;
+                                    if (current?.LocalName == propertyName2)
                                     {
-                                        var current = enumerator.Current as IXmlElement;
-                                        if (current?.LocalName == propertyName2)
-                                        {
-                                            AddJsonArrayAttribute(current, document);
-                                            break;
-                                        }
+                                        AddJsonArrayAttribute(current, document);
+                                        break;
                                     }
                                 }
                             }
@@ -730,41 +721,20 @@ namespace Resonance.Common
 
         private string GetPropertyName(IXmlNode node, XmlNamespaceManager manager)
         {
-            switch (node.NodeType)
+            return node.NodeType switch
             {
-                case XmlNodeType.Element:
-                    return ResolveFullName(node, manager);
-
-                case XmlNodeType.Attribute:
-                    return (PrependOutput ? "@" : string.Empty) + ResolveFullName(node, manager);
-
-                case XmlNodeType.Text:
-                    return PrependOutput ? "#text" : "value";
-
-                case XmlNodeType.CDATA:
-                    return PrependOutput ? "#cdata-section" : "value";
-
-                case XmlNodeType.ProcessingInstruction:
-                    return (PrependOutput ? "?" : string.Empty) + ResolveFullName(node, manager);
-
-                case XmlNodeType.Comment:
-                    return PrependOutput ? "#comment" : string.Empty;
-
-                case XmlNodeType.DocumentType:
-                    return (PrependOutput ? "!" : string.Empty) + ResolveFullName(node, manager);
-
-                case XmlNodeType.Whitespace:
-                    return PrependOutput ? "#whitespace" : string.Empty;
-
-                case XmlNodeType.SignificantWhitespace:
-                    return PrependOutput ? "#significant-whitespace" : string.Empty;
-
-                case XmlNodeType.XmlDeclaration:
-                    return PrependOutput ? "?xml" : string.Empty;
-
-                default:
-                    throw new JsonSerializationException("Unexpected XmlNodeType when getting node name: " + node.NodeType);
-            }
+                XmlNodeType.Element => ResolveFullName(node, manager),
+                XmlNodeType.Attribute => (PrependOutput ? "@" : string.Empty) + ResolveFullName(node, manager),
+                XmlNodeType.Text => PrependOutput ? "#text" : "value",
+                XmlNodeType.CDATA => PrependOutput ? "#cdata-section" : "value",
+                XmlNodeType.ProcessingInstruction => (PrependOutput ? "?" : string.Empty) + ResolveFullName(node, manager),
+                XmlNodeType.Comment => PrependOutput ? "#comment" : string.Empty,
+                XmlNodeType.DocumentType => (PrependOutput ? "!" : string.Empty) + ResolveFullName(node, manager),
+                XmlNodeType.Whitespace => PrependOutput ? "#whitespace" : string.Empty,
+                XmlNodeType.SignificantWhitespace => PrependOutput ? "#significant-whitespace" : string.Empty,
+                XmlNodeType.XmlDeclaration => PrependOutput ? "?xml" : string.Empty,
+                _ => throw new JsonSerializationException("Unexpected XmlNodeType when getting node name: " + node.NodeType),
+            };
         }
 
         private void ReadArrayElements(JsonReader reader, IXmlDocument document, string propertyName, IXmlNode currentNode, XmlNamespaceManager manager)

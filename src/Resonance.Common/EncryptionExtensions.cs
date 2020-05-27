@@ -40,37 +40,33 @@ namespace Resonance.Common
                 // Create the streams used for decryption.
                 var bytes = Convert.FromBase64String(cipherText);
 
-                using (var msDecrypt = new MemoryStream(bytes))
+                using var msDecrypt = new MemoryStream(bytes);
+                // Create a RijndaelManaged object
+                // with the specified key and IV.
+                aesAlg = Aes.Create();
+                aesAlg.Key = key.GetBytes(aesAlg.KeySize / 8);
+                // Get the initialization vector from the encrypted stream
+                aesAlg.IV = ReadByteArray(msDecrypt);
+                // Create a decryptor to perform the stream transform.
+                var decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+
+                using var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
+                using var srDecrypt = new StreamReader(csDecrypt);
+                // Read the decrypted bytes from the decrypting stream
+                // and place them in a SecureString.
+                var f = new char[1];
+
+                while (true)
                 {
-                    // Create a RijndaelManaged object
-                    // with the specified key and IV.
-                    aesAlg = Aes.Create();
-                    aesAlg.Key = key.GetBytes(aesAlg.KeySize / 8);
-                    // Get the initialization vector from the encrypted stream
-                    aesAlg.IV = ReadByteArray(msDecrypt);
-                    // Create a decryptor to perform the stream transform.
-                    var decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+                    var b = srDecrypt.Read(f, 0, 1);
 
-                    using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
-                    using (var srDecrypt = new StreamReader(csDecrypt))
+                    if (b == 1)
                     {
-                        // Read the decrypted bytes from the decrypting stream
-                        // and place them in a SecureString.
-                        var f = new char[1];
-
-                        while (true)
-                        {
-                            var b = srDecrypt.Read(f, 0, 1);
-
-                            if (b == 1)
-                            {
-                                secureString.AppendChar(f[0]);
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
+                        secureString.AppendChar(f[0]);
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
             }
@@ -114,25 +110,21 @@ namespace Resonance.Common
                 // Create the streams used for decryption.
                 var bytes = Convert.FromBase64String(cipherText);
 
-                using (var msDecrypt = new MemoryStream(bytes))
-                {
-                    // Create a RijndaelManaged object
-                    // with the specified key and IV.
-                    aesAlg = Aes.Create();
-                    aesAlg.Key = key.GetBytes(aesAlg.KeySize / 8);
-                    // Get the initialization vector from the encrypted stream
-                    aesAlg.IV = ReadByteArray(msDecrypt);
-                    // Create a decryptor to perform the stream transform.
-                    var decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+                using var msDecrypt = new MemoryStream(bytes);
+                // Create a RijndaelManaged object
+                // with the specified key and IV.
+                aesAlg = Aes.Create();
+                aesAlg.Key = key.GetBytes(aesAlg.KeySize / 8);
+                // Get the initialization vector from the encrypted stream
+                aesAlg.IV = ReadByteArray(msDecrypt);
+                // Create a decryptor to perform the stream transform.
+                var decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
 
-                    using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
-                    using (var srDecrypt = new StreamReader(csDecrypt))
-                    {
-                        // Read the decrypted bytes from the decrypting stream
-                        // and place them in a string.
-                        plaintext = srDecrypt.ReadToEnd();
-                    }
-                }
+                using var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
+                using var srDecrypt = new StreamReader(csDecrypt);
+                // Read the decrypted bytes from the decrypting stream
+                // and place them in a string.
+                plaintext = srDecrypt.ReadToEnd();
             }
             finally
             {
@@ -174,20 +166,18 @@ namespace Resonance.Common
                 var encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
 
                 // Create the streams used for encryption.
-                using (var msEncrypt = new MemoryStream())
+                using var msEncrypt = new MemoryStream();
+                // prepend the IV
+                msEncrypt.Write(BitConverter.GetBytes(aesAlg.IV.Length), 0, sizeof(int));
+                msEncrypt.Write(aesAlg.IV, 0, aesAlg.IV.Length);
+                using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                using (var swEncrypt = new StreamWriter(csEncrypt))
                 {
-                    // prepend the IV
-                    msEncrypt.Write(BitConverter.GetBytes(aesAlg.IV.Length), 0, sizeof(int));
-                    msEncrypt.Write(aesAlg.IV, 0, aesAlg.IV.Length);
-                    using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
-                    using (var swEncrypt = new StreamWriter(csEncrypt))
-                    {
-                        //Write all data to the stream.
-                        swEncrypt.Write(plainText);
-                    }
-
-                    outStr = Convert.ToBase64String(msEncrypt.ToArray());
+                    //Write all data to the stream.
+                    swEncrypt.Write(plainText);
                 }
+
+                outStr = Convert.ToBase64String(msEncrypt.ToArray());
             }
             finally
             {
