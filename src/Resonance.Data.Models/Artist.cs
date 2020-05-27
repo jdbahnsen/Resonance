@@ -8,7 +8,7 @@ namespace Resonance.Data.Models
     {
         public static Artist FromDynamic(dynamic result)
         {
-            var artist = new Artist
+            return new Artist
             {
                 Id = DynamicExtensions.GetGuidFromDynamic(result.Id),
                 CollectionId = DynamicExtensions.GetGuidFromDynamic(result.CollectionId),
@@ -16,8 +16,6 @@ namespace Resonance.Data.Models
                 DateModified = result.DateModified == null ? null : DynamicExtensions.GetDateTimeFromDynamic(result.DateModified),
                 Name = result.Name
             };
-
-            return artist;
         }
     }
 }

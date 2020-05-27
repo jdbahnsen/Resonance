@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Resonance.Data.Storage
 {
-    public class GenreRepositoryDelegate : RepositoryCacheDelegate<Genre>
+    public sealed class GenreRepositoryDelegate : RepositoryCacheDelegate<Genre>
     {
         public GenreRepositoryDelegate(string genre, Guid collectionId)
         {
@@ -38,7 +38,7 @@ namespace Resonance.Data.Storage
                     DateModified = now
                 };
 
-                await metadataRepository.InsertOrUpdateGenreAsync(genre, cancellationToken);
+                await metadataRepository.InsertOrUpdateGenreAsync(genre, cancellationToken).ConfigureAwait(false);
 
                 return genre;
             };

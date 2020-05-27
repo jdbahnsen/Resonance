@@ -27,7 +27,7 @@ namespace Resonance.Data.Models
 
         public static Marker FromDynamic(dynamic result)
         {
-            var marker = new Marker
+            return new Marker
             {
                 TrackId = DynamicExtensions.GetGuidFromDynamic(result.TrackId),
                 User = new User { Id = DynamicExtensions.GetGuidFromDynamic(result.UserId) },
@@ -36,8 +36,6 @@ namespace Resonance.Data.Models
                 DateAdded = DynamicExtensions.GetDateTimeFromDynamic(result.DateAdded),
                 DateModified = result.DateModified == null ? null : DynamicExtensions.GetDateTimeFromDynamic(result.DateModified)
             };
-
-            return marker;
         }
     }
 }

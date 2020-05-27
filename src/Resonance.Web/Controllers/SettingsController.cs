@@ -20,25 +20,25 @@ namespace Resonance.Web.Controllers
         [HttpPost("addCollection")]
         public async Task<Collection> AddCollectionAsync([FromQuery] string name, [FromQuery] string path, [FromQuery] string filter, [FromQuery] bool enabled = true)
         {
-            return await SettingsRepository.AddCollectionAsync(name, path, filter, enabled, CancellationToken.None);
+            return await SettingsRepository.AddCollectionAsync(name, path, filter, enabled, CancellationToken.None).ConfigureAwait(false);
         }
 
         [HttpPost("addUser")]
         public async Task AddUserAsync([FromQuery] string user, [FromQuery] string password)
         {
-            await SettingsRepository.AddUserAsync(user, password, CancellationToken.None);
+            await SettingsRepository.AddUserAsync(user, password, CancellationToken.None).ConfigureAwait(false);
         }
 
         [HttpGet("getCollections")]
         public async Task<IEnumerable<Collection>> GetCollectionsAsync()
         {
-            return await SettingsRepository.GetCollectionsAsync(CancellationToken.None);
+            return await SettingsRepository.GetCollectionsAsync(CancellationToken.None).ConfigureAwait(false);
         }
 
         [HttpPost("removeCollection")]
         public async Task RemoveCollectionAsync([FromQuery] Guid id)
         {
-            await SettingsRepository.RemoveCollectionAsync(id, CancellationToken.None);
+            await SettingsRepository.RemoveCollectionAsync(id, CancellationToken.None).ConfigureAwait(false);
         }
     }
 }

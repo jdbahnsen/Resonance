@@ -31,7 +31,7 @@ namespace Resonance.Data.Models
 
         public static PlayQueue FromDynamic(dynamic result)
         {
-            var playQueue = new PlayQueue
+            return new PlayQueue
             {
                 Id = DynamicExtensions.GetGuidFromDynamic(result.Id),
                 ClientName = result.ClientId,
@@ -41,8 +41,6 @@ namespace Resonance.Data.Models
                 DateAdded = DynamicExtensions.GetDateTimeFromDynamic(result.DateAdded),
                 DateModified = result.DateModified == null ? null : DynamicExtensions.GetDateTimeFromDynamic(result.DateModified)
             };
-
-            return playQueue;
         }
     }
 }

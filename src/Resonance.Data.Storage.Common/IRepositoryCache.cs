@@ -6,7 +6,7 @@ namespace Resonance.Data.Storage
 {
     public interface IRepositoryCacheItem<T>
     {
-        Task<T> GetResultAsync(CancellationToken cancelToken, bool useCache = true);
+        Task<T> GetResultAsync(CancellationToken cancellationToken, bool useCache = true);
 
         void Invalidate();
 

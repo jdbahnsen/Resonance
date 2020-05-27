@@ -17,15 +17,13 @@ namespace Resonance.Data.Models
 
         public static RadioStation FromDynamic(dynamic result)
         {
-            var radioStation = new RadioStation
+            return new RadioStation
             {
                 Id = DynamicExtensions.GetGuidFromDynamic(result.Id),
                 HomepageUrl = result.HomepageUrl,
                 Name = result.Name,
                 StreamUrl = result.StreamUrl
             };
-
-            return radioStation;
         }
     }
 }

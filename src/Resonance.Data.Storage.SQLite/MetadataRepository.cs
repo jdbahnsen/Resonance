@@ -516,7 +516,7 @@ namespace Resonance.Data.Storage.SQLite
                 _dbConnection.QueryAsync(trackArtistCommandDefinition)
             };
 
-            var albumResults = await Task.WhenAll(albumQueryTasks);
+            var albumResults = await Task.WhenAll(albumQueryTasks).ConfigureAwait(false);
 
             var uniqueResults = new Dictionary<Guid, dynamic>();
 
@@ -2701,10 +2701,8 @@ namespace Resonance.Data.Storage.SQLite
                     return null;
                 }
 
-                using (var reader = new StreamReader(resourceStream, Encoding.UTF8))
-                {
-                    return reader.ReadToEnd();
-                }
+                using var reader = new StreamReader(resourceStream, Encoding.UTF8);
+                return reader.ReadToEnd();
             });
         }
 
@@ -2749,7 +2747,7 @@ namespace Resonance.Data.Storage.SQLite
                 tasks.Add(getGenresTask);
             }
 
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
 
             if (getArtistsTask != null)
             {

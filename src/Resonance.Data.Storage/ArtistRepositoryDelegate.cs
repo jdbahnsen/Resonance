@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Resonance.Data.Storage
 {
-    public class ArtistRepositoryDelegate : RepositoryCacheDelegate<MediaBundle<Artist>>
+    public sealed class ArtistRepositoryDelegate : RepositoryCacheDelegate<MediaBundle<Artist>>
     {
         public ArtistRepositoryDelegate(Guid userId, string artist, Guid collectionId)
         {
@@ -50,14 +50,12 @@ namespace Resonance.Data.Storage
 
                 await metadataRepository.InsertOrUpdateArtistAsync(artist, cancelToken).ConfigureAwait(false);
 
-                mediaBundle = new MediaBundle<Artist>
+                return new MediaBundle<Artist>
                 {
                     Media = artist,
                     Dispositions = new List<Disposition>(),
                     Playback = new List<Playback>()
                 };
-
-                return mediaBundle;
             };
         }
 

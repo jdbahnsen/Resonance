@@ -5,6 +5,6 @@ namespace Resonance.Data.Storage
 {
     public interface IRepositoryCacheDelegate<T>
     {
-        Task<T> GetResult(CancellationToken cancelToken);
+        Task<T> GetResult(CancellationToken cancellationToken);
     }
 }

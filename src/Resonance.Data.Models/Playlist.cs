@@ -31,7 +31,7 @@ namespace Resonance.Data.Models
 
         public static Playlist FromDynamic(dynamic result)
         {
-            var playlist = new Playlist
+            return new Playlist
             {
                 Accessibility = (Accessibility)result.Accessibility,
                 Comment = result.Comment,
@@ -41,8 +41,6 @@ namespace Resonance.Data.Models
                 DateAdded = DynamicExtensions.GetDateTimeFromDynamic(result.DateAdded),
                 DateModified = result.DateModified == null ? null : DynamicExtensions.GetDateTimeFromDynamic(result.DateModified)
             };
-
-            return playlist;
         }
     }
 }

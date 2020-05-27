@@ -17,9 +17,9 @@ namespace Resonance.Common
 
             var type = graph == null ? typeof(T) : graph.GetType();
 
-            hash = hash * HashFactor + type.GetHashCode();
+            hash = (hash * HashFactor) + type.GetHashCode();
 
-            return objects.Where(obj => obj != null).Aggregate(hash, (current, obj) => current * HashFactor + obj.GetHashCode());
+            return objects.Where(obj => obj != null).Aggregate(hash, (current, obj) => (current * HashFactor) + obj.GetHashCode());
         }
 
         public static bool PropertiesEqual<T>(this T left, T right, params string[] propertyNames) where T : class
@@ -35,7 +35,7 @@ namespace Resonance.Common
             {
                 var properties = TypeToProperties.GetOrAdd(type, t => t.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
 
-                var property = properties.FirstOrDefault(p => p.Name == propertyName);
+                var property = Array.Find(properties, p => p.Name == propertyName);
 
                 if (property == null)
                 {
@@ -45,7 +45,7 @@ namespace Resonance.Common
                 var leftValue = property.GetValue(left);
                 var rightValue = property.GetValue(right);
 
-                if (leftValue != rightValue && (leftValue == null || !leftValue.Equals(rightValue)))
+                if (leftValue != rightValue && (leftValue?.Equals(rightValue) != true))
                 {
                     return false;
                 }

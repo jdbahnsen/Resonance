@@ -19,16 +19,16 @@ namespace Resonance.Data.Media.Tag
             _useUtc = true;
         }
 
-        public TagLibTagReader(bool useUtc = true)
+        public TagLibTagReader(bool useUtc)
         {
             _useUtc = useUtc;
         }
 
-        public string[] AlbumArtists => _fileTag.Tag.AlbumArtists;
+        public IEnumerable<string> AlbumArtists => _fileTag.Tag.AlbumArtists;
 
         public string AlbumName => _fileTag.Tag.Album;
 
-        public string[] Artists => _fileTag.Tag.Performers;
+        public IEnumerable<string> Artists => _fileTag.Tag.Performers;
 
         public int Bitrate => _fileTag.Properties.AudioBitrate;
 
@@ -36,7 +36,7 @@ namespace Resonance.Data.Media.Tag
 
         public string Comment => _fileTag.Tag.Comment;
 
-        public string[] Composers => _fileTag.Tag.Composers;
+        public IEnumerable<string> Composers => _fileTag.Tag.Composers;
 
         public string ContentType => _fileTag.Properties.Description;
 
@@ -50,7 +50,7 @@ namespace Resonance.Data.Media.Tag
 
         public TimeSpan Duration => _fileTag.Properties.Duration;
 
-        public string[] Genres => _fileTag.Tag.Genres;
+        public IEnumerable<string> Genres => _fileTag.Tag.Genres;
 
         public string Hash { get; private set; }
 

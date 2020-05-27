@@ -32,7 +32,7 @@ namespace Resonance.Data.Models
                 return null;
             }
 
-            var playback = new Playback
+            return new Playback
             {
                 Address = result.Address,
                 ClientId = result.ClientId,
@@ -41,8 +41,6 @@ namespace Resonance.Data.Models
                 TrackId = DynamicExtensions.GetGuidFromDynamic(result.Id),
                 UserId = DynamicExtensions.GetGuidFromDynamic(result.UserId)
             };
-
-            return playback;
         }
     }
 }

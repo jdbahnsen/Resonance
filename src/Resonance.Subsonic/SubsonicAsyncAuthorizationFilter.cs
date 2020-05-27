@@ -33,7 +33,7 @@ namespace Resonance.SubsonicCompat
 
                 var authorizationRequirement = authorizeFilter?.Policy.Requirements.OfType<RolesAuthorizationRequirement>().FirstOrDefault();
 
-                if (authorizationRequirement != null && authorizationRequirement.AllowedRoles.Any())
+                if (authorizationRequirement?.AllowedRoles.Any() == true)
                 {
                     var inRole = authorizationRequirement.AllowedRoles.Any(r => authorizationContext.IsInRole(r));
 

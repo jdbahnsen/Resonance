@@ -105,7 +105,7 @@ namespace Resonance.Data.Models
 
         public static Track FromDynamic(dynamic result)
         {
-            var track = new Track
+            return new Track
             {
                 Id = DynamicExtensions.GetGuidFromDynamic(result.Id),
                 AlbumId = DynamicExtensions.GetGuidFromDynamic(result.AlbumId),
@@ -125,18 +125,16 @@ namespace Resonance.Data.Models
                 Size = Convert.ToInt64(result.Size),
                 Visible = Convert.ToBoolean(result.Visible)
             };
-
-            return track;
         }
 
         public void AddArtists(IEnumerable<MediaBundle<Artist>> artists)
         {
-            Artists = CollectionExtensions.AddValuesToCollection(Artists, artists);
+            Artists = Artists.AddValuesToCollection(artists);
         }
 
         public void AddGenres(IEnumerable<Genre> genres)
         {
-            Genres = CollectionExtensions.AddValuesToCollection(Genres, genres);
+            Genres = Genres.AddValuesToCollection(genres);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using Resonance.Common.Web;
 using Resonance.Data.Models;
 using Resonance.Data.Storage;
@@ -9,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 
 namespace Resonance.Web.Controllers
 {
@@ -79,7 +77,7 @@ namespace Resonance.Web.Controllers
                 playlist.Tracks.Add(track);
             }
 
-            if (playlist.Tracks.Any())
+            if (playlist.Tracks.Count > 0)
             {
                 await MetadataRepository.UpdatePlaylistAsync(playlist, CancellationToken.None).ConfigureAwait(false);
             }
@@ -104,15 +102,6 @@ namespace Resonance.Web.Controllers
             var cancellationToken = new CancellationTokenSource();
 
             MediaLibrary.StopScanningLibrary(Guid.Empty, cancellationToken.Token);
-        }
-
-        [XmlRoot("files")]
-        [JsonObject("files")]
-        public class Files
-        {
-            [XmlElement("file")]
-            [JsonProperty("file")]
-            public List<string> File;
         }
     }
 }

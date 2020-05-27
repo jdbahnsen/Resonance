@@ -53,12 +53,9 @@ namespace Resonance.SubsonicCompat
 
             var disposition = albumMediaBundle.Dispositions.FirstOrDefault();
 
-            if (disposition != null)
+            if (disposition?.Favorited.HasValue == true)
             {
-                if (disposition.Favorited.HasValue)
-                {
-                    subsonicAlbum.Starred = disposition.Favorited.Value;
-                }
+                subsonicAlbum.Starred = disposition.Favorited.Value;
             }
 
             subsonicAlbum.Created = album.DateAdded;
@@ -98,12 +95,9 @@ namespace Resonance.SubsonicCompat
 
             var disposition = albumMediaBundle.Dispositions.FirstOrDefault();
 
-            if (disposition != null)
+            if (disposition?.Favorited.HasValue == true)
             {
-                if (disposition.Favorited.HasValue)
-                {
-                    subsonicAlbum.Starred = disposition.Favorited.Value;
-                }
+                subsonicAlbum.Starred = disposition.Favorited.Value;
             }
 
             subsonicAlbum.Created = album.DateAdded;
@@ -152,12 +146,9 @@ namespace Resonance.SubsonicCompat
 
             var disposition = artistMediaBundle.Dispositions.FirstOrDefault();
 
-            if (disposition != null)
+            if (disposition?.Favorited.HasValue == true)
             {
-                if (disposition.Favorited.HasValue)
-                {
-                    subsonicArtist.Starred = disposition.Favorited.Value;
-                }
+                subsonicArtist.Starred = disposition.Favorited.Value;
             }
 
             return subsonicArtist;
@@ -175,12 +166,9 @@ namespace Resonance.SubsonicCompat
 
             var disposition = artistMediaBundle.Dispositions.FirstOrDefault();
 
-            if (disposition != null)
+            if (disposition?.Favorited.HasValue == true)
             {
-                if (disposition.Favorited.HasValue)
-                {
-                    subsonicArtist.Starred = disposition.Favorited.Value;
-                }
+                subsonicArtist.Starred = disposition.Favorited.Value;
             }
 
             var subsonicArtistAlbums = albumMediaBundles.Select(a => a.ToSubsonicAlbumId3()).AsParallel().ToList();
@@ -198,7 +186,7 @@ namespace Resonance.SubsonicCompat
             var track = await mediaLibrary.GetTrackAsync(userId, marker.TrackId, false, cancellationToken).ConfigureAwait(false);
             var subsonicSong = track.ToSubsonicSong(await mediaLibrary.GetAlbumAsync(userId, track.Media.AlbumId, false, cancellationToken).ConfigureAwait(false));
 
-            var subsonicBookmark = new Bookmark
+            return new Bookmark
             {
                 Position = marker.Position,
                 Comment = marker.Comment ?? string.Empty,
@@ -210,8 +198,6 @@ namespace Resonance.SubsonicCompat
                     subsonicSong
                 }
             };
-
-            return subsonicBookmark;
         }
 
         public static async Task<Bookmarks> ToSubsonicBookmarksAsync(this IEnumerable<Marker> markers, IMediaLibrary mediaLibrary, CancellationToken cancellationToken)
@@ -224,24 +210,20 @@ namespace Resonance.SubsonicCompat
                 subsonicBookmarkItems.Add(subsonicBookmark);
             }
 
-            var subsonicBookmarks = new Bookmarks
+            return new Bookmarks
             {
                 Items = subsonicBookmarkItems
             };
-
-            return subsonicBookmarks;
         }
 
         public static ChatMessage ToSubsonicChatMessage(this Chat chat)
         {
-            var subsonicChatMessage = new ChatMessage
+            return new ChatMessage
             {
                 Time = DateTimeExtensions.GetUnixTimestampMillis(chat.Timestamp),
                 Message = chat.Message,
                 Username = chat.User.Name
             };
-
-            return subsonicChatMessage;
         }
 
         public static Child ToSubsonicChild(this MediaBundle<Album> albumMediaBundle)
@@ -304,14 +286,12 @@ namespace Resonance.SubsonicCompat
 
         public static Genre ToSubsonicGenre(this Data.Models.Genre genre, int albumCount, int songCount)
         {
-            var subsonicGenre = new Genre
+            return new Genre
             {
                 AlbumCount = albumCount,
                 Name = genre.Name,
                 SongCount = songCount
             };
-
-            return subsonicGenre;
         }
 
         public static InternetRadioStation ToSubsonicInternetRadioStation(this RadioStation radioStation)
@@ -399,7 +379,7 @@ namespace Resonance.SubsonicCompat
             {
                 Changed = playlist.DateModified ?? playlist.DateAdded,
                 Comment = playlist.Comment,
-                CoverArt = $"pl-{playlist.Id.ToString()}",
+                CoverArt = $"pl-{playlist.Id}",
                 Created = playlist.DateAdded,
                 Id = playlist.Id.ToString("n"),
                 Name = playlist.Name,
@@ -422,7 +402,7 @@ namespace Resonance.SubsonicCompat
             {
                 Changed = playlist.DateModified ?? playlist.DateAdded,
                 Comment = playlist.Comment,
-                CoverArt = $"pl-{playlist.Id.ToString()}",
+                CoverArt = $"pl-{playlist.Id}",
                 Created = playlist.DateAdded,
                 Id = playlist.Id.ToString("n"),
                 Name = playlist.Name,
@@ -536,7 +516,7 @@ namespace Resonance.SubsonicCompat
 
         public static Subsonic.Common.Classes.User ToSubsonicUser(this User user)
         {
-            var subsonicUser = new Subsonic.Common.Classes.User
+            return new Subsonic.Common.Classes.User
             {
                 AdminRole = user.Roles.Contains(Role.Administrator),
                 CommentRole = user.Roles.Contains(Role.Administrator),
@@ -554,8 +534,6 @@ namespace Resonance.SubsonicCompat
                 StreamRole = user.Roles.Contains(Role.Playback) || user.Roles.Contains(Role.Administrator),
                 Username = user.Name
             };
-
-            return subsonicUser;
         }
     }
 }

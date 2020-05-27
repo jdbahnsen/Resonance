@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Resonance.Data.Media.Audio;
@@ -25,29 +26,32 @@ namespace Resonance.Common.Web
         private const string LastFmApiKey = "e30fe69883aea7850ec353c1ab42ac47";
         private const string LastFmApiPassword = "2ee73e4fd3d8813a3a90a725878d5a95";
 
-        public Startup(IHostingEnvironment env)
+        public Startup(IWebHostEnvironment env)
         {
-            var builder = new ConfigurationBuilder()
+            var configurationBuilder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", true, true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true)
                 .AddEnvironmentVariables();
 
-            Configuration = builder.Build();
+            Configuration = configurationBuilder.Build();
         }
 
         private IConfigurationRoot Configuration { get; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
-            loggerFactory.AddFile("resonance-{Date}.log");
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
 
+            app.UseRouting();
             app.UseCors(CorsPolicyName);
-            app.UseMvc();
             app.UseAuthentication();
+
+            app.UseMvc();
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -55,9 +59,15 @@ namespace Resonance.Common.Web
         {
             // Add framework services.
             services
-                .AddMvc()
+                .AddLogging(c =>
+                {
+                    c.AddConsole();
+                    c.AddDebug();
+                    c.AddFile("resonance-{Date}.log");
+                })
+                .AddMvc(o => o.EnableEndpointRouting = false)
                 .AddXmlSerializerFormatters()
-                .AddJsonOptions(opt =>
+                .AddNewtonsoftJson(opt =>
                 {
                     opt.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                     opt.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
@@ -66,6 +76,7 @@ namespace Resonance.Common.Web
                     opt.SerializerSettings.StringEscapeHandling = StringEscapeHandling.Default;
                 });
 
+            services.AddApplicationInsightsTelemetry();
             services.AddAuthorization(options =>
             {
                 options.AddPolicy(PolicyConstants.Administration, policy => policy.RequireRole(Enum.GetName(typeof(Role), Role.Administrator)));
@@ -74,10 +85,8 @@ namespace Resonance.Common.Web
                 options.AddPolicy(PolicyConstants.Stream, policy => policy.RequireRole(Enum.GetName(typeof(Role), Role.Administrator), Enum.GetName(typeof(Role), Role.Playback)));
             });
 
-            services.AddCors(options =>
-            {
-                options.AddPolicy(CorsPolicyName, builder => builder.AllowAnyOrigin());
-            });
+            services.AddCors(options => options.AddPolicy(CorsPolicyName, builder => builder.AllowAnyOrigin()));
+            services.AddRouting();
 
             var memoryCacheOptions = new MemoryCacheOptions
             {
@@ -125,7 +134,7 @@ namespace Resonance.Common.Web
 
                 if (type?.FullName == null)
                 {
-                    throw new Exception();
+                    throw new ArgumentException($"Unable to determine full name of resonance assembly. {assemblyNameValue} {typeNameValue}");
                 }
 
                 if (assembly.CreateInstance(type.FullName) is IResonanceControllerAssembly instance)

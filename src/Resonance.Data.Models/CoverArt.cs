@@ -24,7 +24,7 @@ namespace Resonance.Data.Models
 
         public static CoverArt FromDynamic(dynamic result)
         {
-            var coverArt = new CoverArt
+            return new CoverArt
             {
                 Id = DynamicExtensions.GetGuidFromDynamic(result.Id),
                 CoverArtType = (CoverArtType)result.CoverArtType,
@@ -32,8 +32,6 @@ namespace Resonance.Data.Models
                 MimeType = result.CoverArtMimeType,
                 Size = DynamicExtensions.GetIntFromDynamic(result.Size)
             };
-
-            return coverArt;
         }
     }
 }

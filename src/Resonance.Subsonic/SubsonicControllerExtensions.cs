@@ -76,11 +76,10 @@ namespace Resonance.SubsonicCompat
         }
 
         /// <summary>
-        ///
+        /// Gets the value for the provided property name.
         /// </summary>
-        /// <param name="value"></param>
-        /// <param name="propertyName"></param>
-        /// <returns></returns>
+        /// <param name="value">The value.</param>
+        /// <param name="propertyName">The property name.</param>
         public static object GetValueForPropertyName(string value, string propertyName)
         {
             switch (propertyName)

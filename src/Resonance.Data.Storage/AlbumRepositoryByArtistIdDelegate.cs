@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Resonance.Data.Storage
 {
-    public class AlbumRepositoryByArtistIdDelegate : RepositoryCacheDelegate<IEnumerable<MediaBundle<Album>>>
+    public sealed class AlbumRepositoryByArtistIdDelegate : RepositoryCacheDelegate<IEnumerable<MediaBundle<Album>>>
     {
         public AlbumRepositoryByArtistIdDelegate(Guid userId, Guid artistId, bool populate)
         {

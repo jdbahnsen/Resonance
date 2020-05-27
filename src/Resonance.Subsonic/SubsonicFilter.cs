@@ -8,8 +8,12 @@ using System.Xml.Linq;
 
 namespace Resonance.SubsonicCompat
 {
-    public class SubsonicFilter
+    public abstract class SubsonicFilter
     {
+        protected SubsonicFilter()
+        {
+        }
+
         public static IActionResult ConvertToResultFormat(Response response, SubsonicQueryParameters queryParameters)
         {
             if (response == null || queryParameters == null)
@@ -58,9 +62,7 @@ namespace Resonance.SubsonicCompat
         {
             var xElement = XElement.Parse(xmlString);
 
-            var jsonResponse = xElement.SerializeXObject(Formatting.None, false, false, SubsonicControllerExtensions.GetValueForPropertyName);
-
-            return jsonResponse;
+            return xElement.SerializeXObject(Formatting.None, false, false, SubsonicControllerExtensions.GetValueForPropertyName);
         }
     }
 }

@@ -7,11 +7,11 @@ namespace Resonance.Data.Media.Common
 {
     public interface ITagReader
     {
-        string[] AlbumArtists { get; }
+        IEnumerable<string> AlbumArtists { get; }
 
         string AlbumName { get; }
 
-        string[] Artists { get; }
+        IEnumerable<string> Artists { get; }
 
         int Bitrate { get; }
 
@@ -19,7 +19,7 @@ namespace Resonance.Data.Media.Common
 
         string Comment { get; }
 
-        string[] Composers { get; }
+        IEnumerable<string> Composers { get; }
 
         string ContentType { get; }
 
@@ -33,7 +33,7 @@ namespace Resonance.Data.Media.Common
 
         TimeSpan Duration { get; }
 
-        string[] Genres { get; }
+        IEnumerable<string> Genres { get; }
 
         string Hash { get; }
 

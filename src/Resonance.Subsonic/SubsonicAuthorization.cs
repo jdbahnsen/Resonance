@@ -33,7 +33,7 @@ namespace Resonance.SubsonicCompat
 
             var user = await _metadataRepository.GetUserAsync(parameters.Username, cancellationToken).ConfigureAwait(false);
 
-            if (user == null || !user.Enabled)
+            if (user?.Enabled != true)
             {
                 user?.Dispose();
 
@@ -71,7 +71,7 @@ namespace Resonance.SubsonicCompat
             {
                 authorizationContext.IsAuthorized = true;
 
-                if (user.Roles == null || !user.Roles.Any())
+                if (user.Roles?.Any() != true)
                 {
                     authorizationContext.Roles = await _metadataRepository.GetRolesForUserAsync(user.Id, cancellationToken).ConfigureAwait(false);
                 }

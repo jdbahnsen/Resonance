@@ -18,14 +18,12 @@ namespace Resonance.Data.Models
 
         public static Chat FromDynamic(dynamic result)
         {
-            var chat = new Chat
+            return new Chat
             {
                 User = new User { Id = DynamicExtensions.GetGuidFromDynamic(result.UserId) },
                 Timestamp = DynamicExtensions.GetDateTimeFromDynamic(result.Timestamp).ToUniversalTime(),
                 Message = result.Message
             };
-
-            return chat;
         }
     }
 }

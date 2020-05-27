@@ -25,7 +25,7 @@ namespace Resonance.Data.Models
 
         public static Album FromDynamic(dynamic result)
         {
-            var album = new Album
+            return new Album
             {
                 Id = DynamicExtensions.GetGuidFromDynamic(result.Id),
                 CollectionId = DynamicExtensions.GetGuidFromDynamic(result.CollectionId),
@@ -33,13 +33,11 @@ namespace Resonance.Data.Models
                 DateModified = result.DateModified == null ? null : DynamicExtensions.GetDateTimeFromDynamic(result.DateModified),
                 Name = result.Name
             };
-
-            return album;
         }
 
         public void AddArtists(IEnumerable<MediaBundle<Artist>> artists)
         {
-            Artists = CollectionExtensions.AddValuesToCollection(Artists, artists);
+            Artists = Artists.AddValuesToCollection(artists);
         }
 
         public void AddTrack(MediaBundle<Track> track)
@@ -48,8 +46,8 @@ namespace Resonance.Data.Models
             Duration = Duration.Add(track.Media.Duration);
             ReleaseDate = Math.Max(ReleaseDate, track.Media.ReleaseDate);
 
-            Tracks = CollectionExtensions.AddValueToCollection(Tracks, track);
-            Genres = CollectionExtensions.AddValuesToCollection(Genres, track.Media.Genres);
+            Tracks = Tracks.AddValueToCollection(track);
+            Genres = Genres.AddValuesToCollection(track.Media.Genres);
         }
     }
 }

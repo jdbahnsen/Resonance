@@ -4,8 +4,6 @@ using Resonance.Data.Models;
 using Resonance.Data.Storage;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Transforms;
-using SixLabors.Primitives;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
@@ -65,21 +63,19 @@ namespace Resonance.Data.Media.Image
             {
                 var bytes = coverArt.CoverArtData;
 
-                using (var memoryStream = new MemoryStream(bytes))
-                using (var imageMemoryStream = new MemoryStream())
-                using (var image = SixLabors.ImageSharp.Image.Load(memoryStream))
-                {
-                    var resizeOptions = new ResizeOptions { Size = new Size { Height = size.Value, Width = size.Value }, Mode = ResizeMode.Max };
+                using var memoryStream = new MemoryStream(bytes);
+                using var imageMemoryStream = new MemoryStream();
+                using var image = SixLabors.ImageSharp.Image.Load(memoryStream);
+                var resizeOptions = new ResizeOptions { Size = new Size { Height = size.Value, Width = size.Value }, Mode = ResizeMode.Max };
 
-                    var resizedImageData = image.Clone(ctx => ctx.Resize(resizeOptions));
+                var resizedImageData = image.Clone(ctx => ctx.Resize(resizeOptions));
 
-                    // Save to PNG to retain quality at the expense of file size
-                    resizedImageData.SaveAsPng(imageMemoryStream);
+                // Save to PNG to retain quality at the expense of file size
+                resizedImageData.SaveAsPng(imageMemoryStream);
 
-                    coverArt.CoverArtData = imageMemoryStream.ToArray();
+                coverArt.CoverArtData = imageMemoryStream.ToArray();
 
-                    WriteCoverArtToDisk(trackCoverArtPath, coverArt.CoverArtData);
-                }
+                WriteCoverArtToDisk(trackCoverArtPath, coverArt.CoverArtData);
             }
 
             coverArt.MimeType = MimeType.GetMimeType(coverArt.CoverArtData, trackCoverArtPath);
@@ -103,14 +99,14 @@ namespace Resonance.Data.Media.Image
             }
             finally
             {
-                ProcessingFiles.TryRemove(trackCoverArtPath, out lockObject);
+                ProcessingFiles.TryRemove(trackCoverArtPath, out _);
             }
 
             // Return the album art on disk if the file exists and is newer than the last modified date of the track
 
             var coverArtData = ReadCoverArtFromDisk(trackCoverArtPath);
 
-            var coverArtReturn = new CoverArt
+            return new CoverArt
             {
                 CoverArtData = coverArtData,
                 CoverArtType = CoverArtType.Front,
@@ -118,8 +114,6 @@ namespace Resonance.Data.Media.Image
                 Size = coverArtData.Length,
                 MimeType = MimeType.GetMimeType(coverArtData, trackCoverArtPath)
             };
-
-            return coverArtReturn;
         }
 
         private static byte[] ReadCoverArtFromDisk(string path)
@@ -132,17 +126,15 @@ namespace Resonance.Data.Media.Image
             {
                 lock (lockObject)
                 {
-                    using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    {
-                        result = new byte[stream.Length];
+                    using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    result = new byte[stream.Length];
 
-                        stream.Read(result, 0, (int)stream.Length);
-                    }
+                    stream.Read(result, 0, (int)stream.Length);
                 }
             }
             finally
             {
-                ProcessingFiles.TryRemove(path, out lockObject);
+                ProcessingFiles.TryRemove(path, out _);
             }
 
             return result;
@@ -163,15 +155,14 @@ namespace Resonance.Data.Media.Image
                         Directory.CreateDirectory(parentDirectory);
                     }
 
-                    using (var stream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
-                    {
-                        stream.Write(bytes, 0, bytes.Length);
-                    }
+                    using var stream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+
+                    stream.Write(bytes, 0, bytes.Length);
                 }
             }
             finally
             {
-                ProcessingFiles.TryRemove(path, out lockObject);
+                ProcessingFiles.TryRemove(path, out _);
             }
         }
     }

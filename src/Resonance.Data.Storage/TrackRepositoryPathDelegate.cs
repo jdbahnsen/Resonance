@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Resonance.Data.Storage
 {
-    public class TrackRepositoryPathDelegate : RepositoryCacheDelegate<MediaBundle<Track>>
+    public sealed class TrackRepositoryPathDelegate : RepositoryCacheDelegate<MediaBundle<Track>>
     {
         public TrackRepositoryPathDelegate(Guid userId, string path, Guid collectionId, bool populate, bool updateCollection)
         {

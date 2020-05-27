@@ -18,7 +18,7 @@ namespace Resonance.Data.Models
 
         public static Collection FromDynamic(dynamic result)
         {
-            var collection = new Collection
+            return new Collection
             {
                 Id = DynamicExtensions.GetGuidFromDynamic(result.Id),
                 DateAdded = DynamicExtensions.GetDateTimeFromDynamic(result.DateAdded),
@@ -28,8 +28,6 @@ namespace Resonance.Data.Models
                 Name = result.Name,
                 Path = result.Path
             };
-
-            return collection;
         }
 
         #region HashCode and Equality Overrides

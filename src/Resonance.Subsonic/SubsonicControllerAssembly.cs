@@ -9,7 +9,7 @@ namespace Resonance.SubsonicCompat
         {
             services
                 .AddMvc()
-                .AddApplicationPart(GetType().Assembly);
+                .AddApplicationPart(GetType().Assembly).AddControllersAsServices();
 
             services.AddSingleton<SubsonicAsyncAuthorizationFilter>();
             services.AddSingleton<SubsonicAsyncResultFilter>();

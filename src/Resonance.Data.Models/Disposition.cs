@@ -30,7 +30,7 @@ namespace Resonance.Data.Models
 
         public static Disposition FromDynamic(dynamic result)
         {
-            var disposition = new Disposition
+            return new Disposition
             {
                 AverageRating = result.AverageRating == null ? null : DynamicExtensions.GetDoubleFromDynamic(result.AverageRating),
                 CollectionId = DynamicExtensions.GetGuidFromDynamic(result.CollectionId),
@@ -41,8 +41,6 @@ namespace Resonance.Data.Models
                 UserId = DynamicExtensions.GetGuidFromDynamic(result.UserId),
                 UserRating = result.Rating == null ? null : DynamicExtensions.GetIntFromDynamic(result.Rating)
             };
-
-            return disposition;
         }
     }
 }

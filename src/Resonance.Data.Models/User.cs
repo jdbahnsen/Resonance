@@ -22,7 +22,7 @@ namespace Resonance.Data.Models
 
         public static User FromDynamic(dynamic result)
         {
-            var user = new User
+            return new User
             {
                 Id = DynamicExtensions.GetGuidFromDynamic(result.Id),
                 EmailAddress = result.EmailAddress,
@@ -32,8 +32,6 @@ namespace Resonance.Data.Models
                 Enabled = Convert.ToBoolean(result.Enabled),
                 Name = result.Name,
             };
-
-            return user;
         }
 
         #region HashCode and Equality Overrides

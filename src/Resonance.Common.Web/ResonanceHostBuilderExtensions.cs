@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
-using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using System.IO;
 using System.Net;
 using System.Security.Authentication;
@@ -9,17 +9,16 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Resonance.Common.Web
 {
-    public static class ResonanceWebHostBuilderExtensions
+    public static class ResonanceHostBuilderExtensions
     {
-        public static IWebHostBuilder GetWebHostBuilder()
+        public static IHostBuilder GetHostBuilder(string[] args)
         {
-            var builder = new ConfigurationBuilder()
+            var configurationBuilder = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", true, true)
                 .AddEnvironmentVariables();
 
-            var configuration = builder.Build();
+            var configuration = configurationBuilder.Build();
 
-            var noDelay = true;
             var addServerHeader = true;
             var httpEnabled = false;
             var httpAddress = IPAddress.Any;
@@ -37,7 +36,6 @@ namespace Resonance.Common.Web
 
                 if (kestrelSettings != null)
                 {
-                    noDelay = kestrelSettings.GetValue("NoDelay", true);
                     addServerHeader = kestrelSettings.GetValue("AddServerHeader", true);
                 }
 
@@ -105,10 +103,11 @@ namespace Resonance.Common.Web
                 }
             }
 
-            var webHostBuilder = new WebHostBuilder()
-                .UseKestrel(options =>
+            var hostBuilder = Host.CreateDefaultBuilder(args);
+
+            return hostBuilder.ConfigureWebHost(b =>
+                b.UseKestrel(options =>
                 {
-                    options.ApplicationSchedulingMode = SchedulingMode.Default;
                     options.AddServerHeader = addServerHeader;
 
                     if (httpEnabled)
@@ -118,16 +117,10 @@ namespace Resonance.Common.Web
 
                     if (httpsEnabled)
                     {
-                        options.Listen(httpsAddress, httpsPort, listenOptions =>
-                        {
-                            listenOptions.NoDelay = noDelay;
-                            listenOptions.UseHttps(httpsConnectionAdapterOptions);
-                        });
+                        options.Listen(httpsAddress, httpsPort, listenOptions => listenOptions.UseHttps(httpsConnectionAdapterOptions));
                     }
                 })
-                .UseContentRoot(Directory.GetCurrentDirectory());
-
-            return webHostBuilder;
+                .UseContentRoot(Directory.GetCurrentDirectory()));
         }
     }
 }

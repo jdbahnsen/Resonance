@@ -74,12 +74,12 @@ namespace Resonance.Data.Storage
 
         public async Task ClearLibraryAsync(Guid userId, Guid? collectionId, CancellationToken cancellationToken)
         {
-            await _metadataRepository.ClearCollectionAsync<Album>(collectionId, cancellationToken);
-            await _metadataRepository.ClearCollectionAsync<Artist>(collectionId, cancellationToken);
-            await _metadataRepository.ClearCollectionAsync<Genre>(collectionId, cancellationToken);
-            await _metadataRepository.ClearCollectionAsync<Track>(collectionId, cancellationToken);
-            await _metadataRepository.ClearCollectionAsync<Disposition>(collectionId, cancellationToken);
-            await _metadataRepository.ClearCollectionAsync<Playback>(collectionId, cancellationToken);
+            await _metadataRepository.ClearCollectionAsync<Album>(collectionId, cancellationToken).ConfigureAwait(false);
+            await _metadataRepository.ClearCollectionAsync<Artist>(collectionId, cancellationToken).ConfigureAwait(false);
+            await _metadataRepository.ClearCollectionAsync<Genre>(collectionId, cancellationToken).ConfigureAwait(false);
+            await _metadataRepository.ClearCollectionAsync<Track>(collectionId, cancellationToken).ConfigureAwait(false);
+            await _metadataRepository.ClearCollectionAsync<Disposition>(collectionId, cancellationToken).ConfigureAwait(false);
+            await _metadataRepository.ClearCollectionAsync<Playback>(collectionId, cancellationToken).ConfigureAwait(false);
         }
 
         public Task<MediaBundle<Album>> GetAlbumAsync(Guid userId, Guid id, bool populate, CancellationToken cancellationToken)
@@ -89,9 +89,9 @@ namespace Resonance.Data.Storage
 
         public async Task<MediaBundle<Album>> GetAlbumAsync(Guid userId, string[] albumArtists, string name, Guid collectionId, bool populate, CancellationToken cancellationToken)
         {
-            var artists = await GetArtistsFromListAsync(userId, albumArtists, collectionId, cancellationToken);
+            var artists = await GetArtistsFromListAsync(userId, albumArtists, collectionId, cancellationToken).ConfigureAwait(false);
 
-            return await _metadataRepositoryCache.GetAlbumAsync(userId, artists, name, collectionId, populate, cancellationToken);
+            return await _metadataRepositoryCache.GetAlbumAsync(userId, artists, name, collectionId, populate, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<MediaInfo> GetAlbumInfoAsync(Album album, CancellationToken cancellationToken)
@@ -100,7 +100,7 @@ namespace Resonance.Data.Storage
 
             //if (mediaInfo == null)
             //{
-            var mediaInfo = await _lastFmClient.GetAlbumInfoAsync(album, cancellationToken);
+            var mediaInfo = await _lastFmClient.GetAlbumInfoAsync(album, cancellationToken).ConfigureAwait(false);
 
             //	if (mediaInfo != null)
             //	{
@@ -130,7 +130,7 @@ namespace Resonance.Data.Storage
         {
             if (string.IsNullOrEmpty(name))
             {
-                return null;
+                return Task.FromResult((MediaBundle<Artist>)null);
             }
 
             if (create)
@@ -147,7 +147,7 @@ namespace Resonance.Data.Storage
 
             //if (mediaInfo == null)
             //{
-            var mediaInfo = await _lastFmClient.GetArtistInfoAsync(artist, cancellationToken);
+            var mediaInfo = await _lastFmClient.GetArtistInfoAsync(artist, cancellationToken).ConfigureAwait(false);
 
             //	if (mediaInfo != null)
             //	{
@@ -169,11 +169,11 @@ namespace Resonance.Data.Storage
 
             foreach (var artistName in artistNames)
             {
-                var artist = await GetArtistAsync(userId, artistName, collectionId, true, cancellationToken);
+                var artist = await GetArtistAsync(userId, artistName, collectionId, true, cancellationToken).ConfigureAwait(false);
                 artists.Add(artist.Media);
             }
 
-            return artists.Any() ? artists : null;
+            return artists.Count > 0 ? artists : null;
         }
 
         public async Task<CoverArt> GetCoverArtAsync(Guid userId, Guid id, int? size, CancellationToken cancellationToken)
@@ -197,7 +197,7 @@ namespace Resonance.Data.Storage
         {
             if (string.IsNullOrEmpty(name))
             {
-                return null;
+                return Task.FromResult((Genre)null);
             }
 
             return _metadataRepositoryCache.GetGenreAsync(name, collectionId, cancellationToken);
@@ -223,7 +223,7 @@ namespace Resonance.Data.Storage
                 genres.Add(genre);
             }
 
-            return genres.Any() ? genres : null;
+            return genres.Count > 0 ? genres : null;
         }
 
         public Task<IEnumerable<MediaBundle<Album>>> GetHighestRatedAlbumsAsync(Guid userId, int size, int offset, string genre, int? fromYear, int? toYear, Guid? collectionId, bool populate, CancellationToken cancellationToken)
@@ -347,7 +347,7 @@ namespace Resonance.Data.Storage
                          if (clear)
                          {
                              collection.DateModified = DateTime.MinValue;
-                             await _metadataRepository.InsertOrUpdateCollectionAsync(collection, cancellationToken);
+                             await _metadataRepository.InsertOrUpdateCollectionAsync(collection, cancellationToken).ConfigureAwait(false);
                          }
 
                          var files = Directory.GetFiles(collection.Path, collection.Filter, SearchOption.AllDirectories);

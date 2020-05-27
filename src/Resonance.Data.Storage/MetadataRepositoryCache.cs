@@ -38,11 +38,11 @@ namespace Resonance.Data.Storage
 
         public bool UseCache { get; set; }
 
-        public async Task<MediaBundle<Album>> GetAlbumAsync(Guid userId, string[] albumArtists, string name, Guid collectionId, bool populate, CancellationToken cancellationToken)
+        public async Task<MediaBundle<Album>> GetAlbumAsync(Guid userId, IEnumerable<string> albumArtists, string name, Guid collectionId, bool populate, CancellationToken cancellationToken)
         {
             var artists = await GetArtistsFromListAsync(userId, albumArtists, collectionId, cancellationToken).ConfigureAwait(false);
 
-            return await GetAlbumAsync(userId, artists, name, collectionId, populate, cancellationToken);
+            return await GetAlbumAsync(userId, artists, name, collectionId, populate, cancellationToken).ConfigureAwait(false);
         }
 
         public Task<MediaBundle<Album>> GetAlbumAsync(Guid userId, HashSet<Artist> artists, string name, Guid collectionId, bool populate, CancellationToken cancellationToken)
@@ -101,7 +101,7 @@ namespace Resonance.Data.Storage
                 artists.Add(artist.Media);
             }
 
-            return artists.Any() ? artists : null;
+            return artists.Count > 0 ? artists : null;
         }
 
         public Task<Genre> GetGenreAsync(string genre, Guid collectionId, CancellationToken cancellationToken)
@@ -144,11 +144,11 @@ namespace Resonance.Data.Storage
 
             foreach (var genreName in genreNames)
             {
-                var genre = await GetGenreAsync(genreName, collectionId, cancellationToken);
+                var genre = await GetGenreAsync(genreName, collectionId, cancellationToken).ConfigureAwait(false);
                 genres.Add(genre);
             }
 
-            return genres.Any() ? genres : null;
+            return genres.Count > 0 ? genres : null;
         }
 
         public Task<Playlist> GetPlaylistAsync(Guid userId, Guid id, bool getTracks, CancellationToken cancellationToken)
@@ -196,9 +196,9 @@ namespace Resonance.Data.Storage
             var albumArtists = tagReader.AlbumArtists;
             var trackArtists = tagReader.Artists;
 
-            if (albumArtists == null || !albumArtists.Any())
+            if (albumArtists?.Any() != true)
             {
-                if (trackArtists != null && trackArtists.Any())
+                if (trackArtists?.Any() == true)
                 {
                     albumArtists = trackArtists;
                 }
@@ -212,9 +212,9 @@ namespace Resonance.Data.Storage
 
             var track = albumMediaBundle == null ? new Track() : new Track(albumMediaBundle.Media);
 
-            var artists = await GetArtistsFromListAsync(userId, tagReader.Artists, collectionId, cancellationToken);
+            var artists = await GetArtistsFromListAsync(userId, tagReader.Artists, collectionId, cancellationToken).ConfigureAwait(false);
 
-            if (artists != null && artists.Any())
+            if (artists?.Count > 0)
             {
                 var artistMediaBundles = artists.Select(artist => new MediaBundle<Artist>
                 {
@@ -252,7 +252,7 @@ namespace Resonance.Data.Storage
 
             var genres = await GetGenresFromListAsync(tagReader.Genres, collectionId, cancellationToken).ConfigureAwait(false);
 
-            if (genres != null && genres.Any())
+            if (genres?.Count > 0)
             {
                 track.Genres = new HashSet<Genre>(genres);
             }
@@ -265,7 +265,7 @@ namespace Resonance.Data.Storage
 
             var composers = await GetArtistsFromListAsync(userId, tagReader.Composers, collectionId, cancellationToken).ConfigureAwait(false);
 
-            if (composers != null && composers.Any())
+            if (composers?.Count > 0)
             {
                 var composerMediaBundles = composers.Select(composer => new MediaBundle<Artist>
                 {

@@ -31,19 +31,14 @@ namespace Resonance.Data.Storage
 
         public virtual async Task<T> GetResultAsync(CancellationToken cancellationToken, bool useCache = true)
         {
-            T result;
-
-            if (useCache)
+            if (useCache && Cache.TryGetValue(RepositoryDelegate, out T result))
             {
-                if (Cache.TryGetValue(RepositoryDelegate, out result))
-                {
-                    return result;
-                }
+                return result;
             }
 
-            result = await RepositoryDelegate.GetResult(cancellationToken);
+            result = await RepositoryDelegate.GetResult(cancellationToken).ConfigureAwait(false);
 
-            if (!useCache || result == null && !AddNullToCache)
+            if (!useCache || (result == null && !AddNullToCache))
             {
                 return result;
             }

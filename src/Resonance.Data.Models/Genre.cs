@@ -21,7 +21,7 @@ namespace Resonance.Data.Models
 
         public static Genre FromDynamic(dynamic result)
         {
-            var genre = new Genre
+            return new Genre
             {
                 Id = DynamicExtensions.GetGuidFromDynamic(result.Id),
                 CollectionId = DynamicExtensions.GetGuidFromDynamic(result.CollectionId),
@@ -29,8 +29,6 @@ namespace Resonance.Data.Models
                 DateModified = result.DateModified == null ? null : DynamicExtensions.GetDateTimeFromDynamic(result.DateModified),
                 Name = result.Name
             };
-
-            return genre;
         }
     }
 }

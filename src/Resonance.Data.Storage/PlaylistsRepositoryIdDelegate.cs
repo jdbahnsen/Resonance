@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Resonance.Data.Storage
 {
-    public class PlaylistsRepositoryIdDelegate : RepositoryCacheDelegate<IEnumerable<Playlist>>
+    public sealed class PlaylistsRepositoryIdDelegate : RepositoryCacheDelegate<IEnumerable<Playlist>>
     {
         public PlaylistsRepositoryIdDelegate(Guid userId, string username, bool getTracks)
         {

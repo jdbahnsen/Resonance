@@ -95,7 +95,7 @@ namespace Resonance.SubsonicCompat.Controllers
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (user.Roles == null || !user.Roles.Any())
+                if (user.Roles?.Any() != true)
                 {
                     user.Roles = await MetadataRepository.GetRolesForUserAsync(user.Id, cancellationToken).ConfigureAwait(false);
                 }
@@ -1114,7 +1114,7 @@ namespace Resonance.SubsonicCompat.Controllers
 
             var indexDictionary = new Dictionary<char, List<Subsonic.Common.Classes.Artist>>();
 
-            var indexes = new Indexes { Items = new List<Index>() };
+            var indexes = new Indexes { Items = new List<Subsonic.Common.Classes.Index>() };
 
             if (ifModifiedSince.HasValue)
             {
@@ -1154,7 +1154,7 @@ namespace Resonance.SubsonicCompat.Controllers
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var index = new Index
+                var index = new Subsonic.Common.Classes.Index
                 {
                     Name = key.ToString(),
                     Artists = indexDictionary[key].OrderBy(k => k.Name).ToList()
@@ -1250,7 +1250,7 @@ namespace Resonance.SubsonicCompat.Controllers
 
                     var albumMediaBundles = await MediaLibrary.GetAlbumsByArtistAsync(userId, id, true, cancellationToken).ConfigureAwait(false);
 
-                    if (albumMediaBundles == null || !albumMediaBundles.Any())
+                    if (albumMediaBundles?.Any() != true)
                     {
                         return SubsonicControllerExtensions.CreateFailureResponse(ErrorCode.RequestedDataNotFound, SubsonicConstants.DirectoryNotFound);
                     }
@@ -1811,7 +1811,7 @@ namespace Resonance.SubsonicCompat.Controllers
 
                 user = await MetadataRepository.GetUserAsync(username, cancellationToken).ConfigureAwait(false);
 
-                if (user.Roles == null || !user.Roles.Any())
+                if (user.Roles?.Any() != true)
                 {
                     user.Roles = await MetadataRepository.GetRolesForUserAsync(user.Id, cancellationToken).ConfigureAwait(false);
                 }
@@ -1846,7 +1846,7 @@ namespace Resonance.SubsonicCompat.Controllers
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (user.Roles == null || !user.Roles.Any())
+                if (user.Roles?.Any() != true)
                 {
                     user.Roles = await MetadataRepository.GetRolesForUserAsync(user.Id, cancellationToken).ConfigureAwait(false);
                 }
@@ -2047,7 +2047,6 @@ namespace Resonance.SubsonicCompat.Controllers
             }
 
             // TODO: Search
-
             return SubsonicControllerExtensions.CreateResponse(ItemChoiceType.SearchResult, new SearchResult());
         }
 
@@ -2118,17 +2117,17 @@ namespace Resonance.SubsonicCompat.Controllers
 
             await Task.WhenAll(tasks);
 
-            if (artistsSearchTask != null && artistsSearchTask.Status == TaskStatus.RanToCompletion)
+            if (artistsSearchTask?.Status == TaskStatus.RanToCompletion)
             {
                 artists = artistsSearchTask.Result;
             }
 
-            if (albumSearchTask != null && albumSearchTask.Status == TaskStatus.RanToCompletion)
+            if (albumSearchTask?.Status == TaskStatus.RanToCompletion)
             {
                 albums = albumSearchTask.Result;
             }
 
-            if (trackSearchTask != null && trackSearchTask.Status == TaskStatus.RanToCompletion)
+            if (trackSearchTask?.Status == TaskStatus.RanToCompletion)
             {
                 tracks = trackSearchTask.Result;
             }
@@ -2226,17 +2225,17 @@ namespace Resonance.SubsonicCompat.Controllers
 
             await Task.WhenAll(tasks);
 
-            if (artistsSearchTask != null && artistsSearchTask.Status == TaskStatus.RanToCompletion)
+            if (artistsSearchTask?.Status == TaskStatus.RanToCompletion)
             {
                 artists = artistsSearchTask.Result;
             }
 
-            if (albumSearchTask != null && albumSearchTask.Status == TaskStatus.RanToCompletion)
+            if (albumSearchTask?.Status == TaskStatus.RanToCompletion)
             {
                 albums = albumSearchTask.Result;
             }
 
-            if (trackSearchTask != null && trackSearchTask.Status == TaskStatus.RanToCompletion)
+            if (trackSearchTask?.Status == TaskStatus.RanToCompletion)
             {
                 tracks = trackSearchTask.Result;
             }
@@ -2316,7 +2315,7 @@ namespace Resonance.SubsonicCompat.Controllers
 
             var userId = authorizationContext.User.Id;
 
-            Guid mediaId;
+            Guid mediaId = default;
 
             if (id.HasValue)
             {
@@ -2466,7 +2465,7 @@ namespace Resonance.SubsonicCompat.Controllers
 
             var userId = authorizationContext.User.Id;
 
-            Guid mediaId;
+            Guid mediaId = default;
 
             if (id.HasValue)
             {
@@ -2564,7 +2563,7 @@ namespace Resonance.SubsonicCompat.Controllers
 
                 if (songIndexesToRemove.Count > 0)
                 {
-                    updatedTrackListing.AddRange(playlist.Tracks.Where((t, i) => !songIndexesToRemove.Contains(i)));
+                    updatedTrackListing.AddRange(playlist.Tracks.Where((_, i) => !songIndexesToRemove.Contains(i)));
                 }
 
                 foreach (var songId in songIdsToAdd)
@@ -2607,7 +2606,7 @@ namespace Resonance.SubsonicCompat.Controllers
                 }.CreateAuthorizationFailureResponse();
             }
 
-            if (user.Roles == null || !user.Roles.Any())
+            if (user.Roles?.Any() != true)
             {
                 user.Roles = await MetadataRepository.GetRolesForUserAsync(user.Id, cancellationToken).ConfigureAwait(false);
             }
