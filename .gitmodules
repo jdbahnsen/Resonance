@@ -1,6 +1,7 @@
 [submodule "taglib-sharp"]
 	path = taglib-sharp
-	url = https://github.com/archrival/taglib-sharp
+	url = https://github.com/mono/taglib-sharp
+	branch = master
 	
 [submodule "SubsonicSharp"]
 	path = SubsonicSharp
