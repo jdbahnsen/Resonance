@@ -3,7 +3,3 @@
 	url = https://github.com/mono/taglib-sharp
 	branch = master
 	
-[submodule "SubsonicSharp"]
-	path = SubsonicSharp
-	url = https://github.com/archrival/SubsonicSharp
-
