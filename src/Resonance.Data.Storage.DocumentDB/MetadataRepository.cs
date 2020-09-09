@@ -243,13 +243,11 @@ namespace Resonance.Data.Storage.DocumentDB
             var artist = _client.CreateDocumentQuery<Artist>(UriFactory.CreateDocumentCollectionUri(DatabaseConstants.DatabaseId, DatabaseConstants.Artist), _defaultFeedOptions)
             .FirstOrDefault(s => s.Id == id);
 
-            var mediaBundle = new MediaBundle<Artist>()
+            return new MediaBundle<Artist>()
             {
                 Media = artist,
                 Dispositions = new List<Disposition> { await GetDispositionAsync(userId, id, cancellationToken) }
             };
-
-            return mediaBundle;
         }
 
         public async Task<MediaBundle<Artist>> GetArtistAsync(Guid userId, string artist, Guid? collectionId, CancellationToken cancellationToken)
@@ -270,13 +268,11 @@ namespace Resonance.Data.Storage.DocumentDB
                 return null;
             }
 
-            var mediaBundle = new MediaBundle<Artist>()
+            return new MediaBundle<Artist>()
             {
                 Media = artistModel,
                 Dispositions = new List<Disposition> { await GetDispositionAsync(userId, artistModel.Id, cancellationToken) }
             };
-
-            return mediaBundle;
         }
 
         public Task<IEnumerable<MediaBundle<Artist>>> GetArtistsAsync(Guid userId, Guid? collectionId, CancellationToken cancellationToken)

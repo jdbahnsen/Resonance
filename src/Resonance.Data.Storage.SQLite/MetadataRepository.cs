@@ -159,20 +159,20 @@ namespace Resonance.Data.Storage.SQLite
             }
         }
 
-        public async Task DeletePlaylistAsync(Guid userId, Guid playlistId, CancellationToken cancellationToken)
+        public async Task DeletePlaylistAsync(Guid userId, Guid id, CancellationToken cancellationToken)
         {
             var transaction = _transaction ?? _dbConnection.BeginTransaction();
 
             try
             {
-                var commandDefinition = new CommandDefinition(GetScript("Playlist_Delete"), new { PlaylistId = playlistId, UserId = userId }, transaction, cancellationToken: cancellationToken);
+                var commandDefinition = new CommandDefinition(GetScript("Playlist_Delete"), new { PlaylistId = id, UserId = userId }, transaction, cancellationToken: cancellationToken);
 
                 await _dbConnection.ExecuteAsync(commandDefinition).ConfigureAwait(false);
 
                 var builder = new SqlBuilder();
 
                 var template = builder.AddTemplate(GetScript("Playlist_Track_Delete"));
-                builder.Where("PlaylistId = @PlaylistId", new { PlaylistId = playlistId });
+                builder.Where("PlaylistId = @PlaylistId", new { PlaylistId = id });
 
                 commandDefinition = new CommandDefinition(template.RawSql, template.Parameters, transaction, cancellationToken: cancellationToken);
 
@@ -195,7 +195,7 @@ namespace Resonance.Data.Storage.SQLite
             }
         }
 
-        public async Task DeletePlaylistTracksAsync(Guid playlistId, CancellationToken cancellationToken)
+        public async Task DeletePlaylistTracksAsync(Guid id, CancellationToken cancellationToken)
         {
             var transaction = _transaction ?? _dbConnection.BeginTransaction();
 
@@ -204,7 +204,7 @@ namespace Resonance.Data.Storage.SQLite
                 var builder = new SqlBuilder();
 
                 var template = builder.AddTemplate(GetScript("Playlist_Track_Delete"));
-                builder.Where("PlaylistId = @PlaylistId", new { PlaylistId = playlistId });
+                builder.Where("PlaylistId = @PlaylistId", new { PlaylistId = id });
 
                 var commandDefinition = new CommandDefinition(template.RawSql, template.Parameters, transaction, cancellationToken: cancellationToken);
 
@@ -1138,9 +1138,7 @@ namespace Resonance.Data.Storage.SQLite
 
             var result = await _dbConnection.ExecuteScalarAsync<int?>(commandDefinition).ConfigureAwait(false);
 
-            var mediaType = (MediaType?)result;
-
-            return mediaType;
+            return (MediaType?)result;
         }
 
         public async Task<IEnumerable<MediaBundle<Album>>> GetMostPlayedAlbumsAsync(Guid userId, int size, int offset, string genre, int? fromYear, int? toYear, Guid? collectionId, bool populate, CancellationToken cancellationToken)
@@ -2422,14 +2420,14 @@ namespace Resonance.Data.Storage.SQLite
             throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<MediaBundle<T>>> SearchAsync<T>(Guid userId, string queryString, int size, int offset, Guid? collectionId, bool populate, CancellationToken cancellationToken) where T : MediaBase, ISearchable, ICollectionIdentifier
+        public async Task<IEnumerable<MediaBundle<T>>> SearchAsync<T>(Guid userId, string query, int size, int offset, Guid? collectionId, bool populate, CancellationToken cancellationToken) where T : MediaBase, ISearchable, ICollectionIdentifier
         {
             var genericType = typeof(T);
             var builder = new SqlBuilder();
             Dapper.SqlBuilder.Template template;
 
-            queryString = SearchRegex.Replace(queryString, string.Empty);
-            queryString = $"%{queryString}%";
+            query = SearchRegex.Replace(query, string.Empty);
+            query = $"%{query}%";
 
             if (genericType == typeof(Artist))
             {
@@ -2454,9 +2452,9 @@ namespace Resonance.Data.Storage.SQLite
                     builder.Where("a.CollectionId = @CollectionId", new { CollectionId = collectionId });
                 }
 
-                if (!string.IsNullOrWhiteSpace(queryString))
+                if (!string.IsNullOrWhiteSpace(query))
                 {
-                    builder.Where("a.Name LIKE @Query", new { Query = queryString });
+                    builder.Where("a.Name LIKE @Query", new { Query = query });
                 }
 
                 builder.OrderBy("a.Name");
@@ -2473,9 +2471,9 @@ namespace Resonance.Data.Storage.SQLite
                     builder.Where("a.CollectionId = @CollectionId", new { CollectionId = collectionId });
                 }
 
-                if (!string.IsNullOrWhiteSpace(queryString))
+                if (!string.IsNullOrWhiteSpace(query))
                 {
-                    builder.Where("a.Name LIKE @Query", new { Query = queryString });
+                    builder.Where("a.Name LIKE @Query", new { Query = query });
                 }
 
                 builder.OrderBy("a.Name");
@@ -2489,9 +2487,9 @@ namespace Resonance.Data.Storage.SQLite
                     builder.Where("t.CollectionId = @CollectionId", new { CollectionId = collectionId });
                 }
 
-                if (!string.IsNullOrWhiteSpace(queryString))
+                if (!string.IsNullOrWhiteSpace(query))
                 {
-                    builder.Where("t.Name LIKE @Query", new { Query = queryString });
+                    builder.Where("t.Name LIKE @Query", new { Query = query });
                 }
 
                 builder.OrderBy("t.Name");

@@ -8,7 +8,7 @@ namespace Resonance.Data.Models
     public class CoverArt : ModelBase
     {
         [JsonIgnore]
-        public byte[] CoverArtData { get; set; }
+        public ReadOnlyMemory<byte> CoverArtData { get; set; }
 
         [JsonProperty("coverArtType")]
         public CoverArtType CoverArtType { get; set; }

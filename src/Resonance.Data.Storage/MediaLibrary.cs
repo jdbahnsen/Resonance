@@ -328,9 +328,7 @@ namespace Resonance.Data.Storage
                          collectionsToScan = collectionsToScan.Where(c => c.Id == collectionId).ToList();
                      }
 
-                     var totalCollectionCount = collectionsToScan.Count;
-
-                     ScanProgress.TotalCollectionCount = totalCollectionCount;
+                     ScanProgress.TotalCollectionCount = collectionsToScan.Count;
 
                      foreach (var collection in collectionsToScan)
                      {
@@ -353,9 +351,7 @@ namespace Resonance.Data.Storage
                          var files = Directory.GetFiles(collection.Path, collection.Filter, SearchOption.AllDirectories);
 
                          var fileCount = 0;
-                         var totalFileCount = files.Length;
-
-                         ScanProgress.TotalFileCount = totalFileCount;
+                         ScanProgress.TotalFileCount = files.Length;
 
                          foreach (var file in files)
                          {

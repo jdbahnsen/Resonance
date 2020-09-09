@@ -4,6 +4,7 @@ using Resonance.Data.Models;
 using Resonance.Data.Storage;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
@@ -44,9 +45,12 @@ namespace Resonance.Data.Media.Image
 
             if (coverArt == null)
             {
-                var tagReader = _tagReaderFactory.CreateTagReader(track.Path, false);
+                if (File.Exists(track.Path))
+                {
+                    var tagReader = _tagReaderFactory.CreateTagReader(track.Path, false);
 
-                coverArt = tagReader.CoverArt.FirstOrDefault(ca => ca.CoverArtType == CoverArtType.Front || ca.CoverArtType == CoverArtType.Other);
+                    coverArt = tagReader.CoverArt.FirstOrDefault(ca => ca.CoverArtType == CoverArtType.Front || ca.CoverArtType == CoverArtType.Other);
+                }
 
                 if (coverArt != null)
                 {
@@ -61,11 +65,8 @@ namespace Resonance.Data.Media.Image
             // Resize the image if requested
             if (size.HasValue)
             {
-                var bytes = coverArt.CoverArtData;
-
-                using var memoryStream = new MemoryStream(bytes);
                 using var imageMemoryStream = new MemoryStream();
-                using var image = SixLabors.ImageSharp.Image.Load(memoryStream);
+                using var image = SixLabors.ImageSharp.Image.Load(coverArt.CoverArtData.Span);
                 var resizeOptions = new ResizeOptions { Size = new Size { Height = size.Value, Width = size.Value }, Mode = ResizeMode.Max };
 
                 var resizedImageData = image.Clone(ctx => ctx.Resize(resizeOptions));
@@ -116,7 +117,7 @@ namespace Resonance.Data.Media.Image
             };
         }
 
-        private static byte[] ReadCoverArtFromDisk(string path)
+        private static ReadOnlyMemory<byte> ReadCoverArtFromDisk(string path)
         {
             var lockObject = ProcessingFiles.GetOrAdd(path, new object());
 
@@ -140,7 +141,7 @@ namespace Resonance.Data.Media.Image
             return result;
         }
 
-        private static void WriteCoverArtToDisk(string path, byte[] bytes)
+        private static void WriteCoverArtToDisk(string path, ReadOnlyMemory<byte> bytes)
         {
             var lockObject = ProcessingFiles.GetOrAdd(path, new object());
 
@@ -157,7 +158,7 @@ namespace Resonance.Data.Media.Image
 
                     using var stream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
 
-                    stream.Write(bytes, 0, bytes.Length);
+                    stream.Write(bytes.ToArray(), 0, bytes.Length);
                 }
             }
             finally

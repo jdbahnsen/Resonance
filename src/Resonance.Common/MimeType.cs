@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 
 namespace Resonance.Common
@@ -151,7 +152,7 @@ namespace Resonance.Common
             return GetMimeType(bytes, fileName);
         }
 
-        public static string GetMimeType(byte[] file, string fileName)
+        public static string GetMimeType(ReadOnlyMemory<byte> file, string fileName)
         {
             var mime = "application/octet-stream";
 
@@ -163,11 +164,11 @@ namespace Resonance.Common
                 extension = pathExtension.ToUpper();
             }
 
-            if (file.Take(3).SequenceEqual(MP3))
+            if (file.Slice(0, 3).ToArray().SequenceEqual(MP3))
             {
                 mime = "audio/mpeg";
             }
-            else if (file.Take(14).SequenceEqual(OGG))
+            else if (file.Slice(0, 14).ToArray().SequenceEqual(OGG))
             {
                 if (extension == ".OGX")
                 {
@@ -182,67 +183,67 @@ namespace Resonance.Common
                     mime = "video/ogg";
                 }
             }
-            else if (file.Take(16).SequenceEqual(PNG))
+            else if (file.Slice(0, 16).ToArray().SequenceEqual(PNG))
             {
                 mime = "image/png";
             }
-            else if (file.Take(3).SequenceEqual(JPG))
+            else if (file.Slice(0, 3).ToArray().SequenceEqual(JPG))
             {
                 mime = "image/jpeg";
             }
-            else if (file.Take(2).SequenceEqual(BMP))
+            else if (file.Slice(0, 2).ToArray().SequenceEqual(BMP))
             {
                 mime = "image/bmp";
             }
-            else if (file.Take(8).SequenceEqual(DOC))
+            else if (file.Slice(0, 8).ToArray().SequenceEqual(DOC))
             {
                 mime = "application/msword";
             }
-            else if (file.Take(2).SequenceEqual(EXE_DLL))
+            else if (file.Slice(0, 2).ToArray().SequenceEqual(EXE_DLL))
             {
                 mime = "application/x-msdownload"; //both use same mime type
             }
-            else if (file.Take(4).SequenceEqual(GIF))
+            else if (file.Slice(0, 4).ToArray().SequenceEqual(GIF))
             {
                 mime = "image/gif";
             }
-            else if (file.Take(4).SequenceEqual(ICO))
+            else if (file.Slice(0, 4).ToArray().SequenceEqual(ICO))
             {
                 mime = "image/x-icon";
             }
-            else if (file.Take(7).SequenceEqual(PDF))
+            else if (file.Slice(0, 7).ToArray().SequenceEqual(PDF))
             {
                 mime = "application/pdf";
             }
-            else if (file.Take(7).SequenceEqual(RAR))
+            else if (file.Slice(0, 7).ToArray().SequenceEqual(RAR))
             {
                 mime = "application/x-rar-compressed";
             }
-            else if (file.Take(3).SequenceEqual(SWF))
+            else if (file.Slice(0, 3).ToArray().SequenceEqual(SWF))
             {
                 mime = "application/x-shockwave-flash";
             }
-            else if (file.Take(4).SequenceEqual(TIFF))
+            else if (file.Slice(0, 4).ToArray().SequenceEqual(TIFF))
             {
                 mime = "image/tiff";
             }
-            else if (file.Take(11).SequenceEqual(TORRENT))
+            else if (file.Slice(0, 11).ToArray().SequenceEqual(TORRENT))
             {
                 mime = "application/x-bittorrent";
             }
-            else if (file.Take(5).SequenceEqual(TTF))
+            else if (file.Slice(0, 5).ToArray().SequenceEqual(TTF))
             {
                 mime = "application/x-font-ttf";
             }
-            else if (file.Take(4).SequenceEqual(WAV_AVI))
+            else if (file.Slice(0, 4).ToArray().SequenceEqual(WAV_AVI))
             {
                 mime = extension == ".AVI" ? "video/x-msvideo" : "audio/x-wav";
             }
-            else if (file.Take(16).SequenceEqual(WMV_WMA))
+            else if (file.Slice(0, 16).ToArray().SequenceEqual(WMV_WMA))
             {
                 mime = extension == ".WMA" ? "audio/x-ms-wma" : "video/x-ms-wmv";
             }
-            else if (file.Take(4).SequenceEqual(ZIP_DOCX))
+            else if (file.Slice(0, 4).ToArray().SequenceEqual(ZIP_DOCX))
             {
                 mime = extension == ".DOCX" ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "application/x-zip-compressed";
             }

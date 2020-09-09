@@ -37,7 +37,7 @@ namespace Resonance.Data.Media.LastFm
 
             var albumInfo = response.Content;
 
-            var mediaInfo = new MediaInfo
+            return new MediaInfo
             {
                 LastFm = new Models.LastFm
                 {
@@ -51,8 +51,6 @@ namespace Resonance.Data.Media.LastFm
                 MediaId = artist.Media.Id,
                 MusicBrainzId = albumInfo.Mbid,
             };
-
-            return mediaInfo;
         }
 
         public async Task<MediaInfo> GetArtistInfoAsync(Artist artist, CancellationToken cancellationToken)

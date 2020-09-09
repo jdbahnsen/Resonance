@@ -20,6 +20,7 @@ namespace Resonance
             var isService = !(Debugger.IsAttached || args.Contains("--console"));
 
             var hostBuilder = ResonanceHostBuilderExtensions.GetHostBuilder(args);
+
             hostBuilder.ConfigureWebHost(c => c.UseStartup<Startup>());
 
             if (isService)

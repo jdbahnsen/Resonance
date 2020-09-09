@@ -40,30 +40,22 @@ namespace Resonance.Data.Storage
             if (right is null)
                 return false;
 
-            var propertiesEqual = left.PropertiesEqual(right, nameof(GetTracks), nameof(UserId), nameof(Username));
-
-            return propertiesEqual;
+            return left.PropertiesEqual(right, nameof(GetTracks), nameof(UserId), nameof(Username));
         }
 
         public override bool Equals(object obj)
         {
-            var equals = obj != null && Equals(obj as PlaylistsRepositoryIdDelegate);
-
-            return equals;
+            return obj != null && Equals(obj as PlaylistsRepositoryIdDelegate);
         }
 
         public override int GetHashCode()
         {
-            var hashCode = this.GetHashCodeForObject(GetTracks, UserId, Username);
-
-            return hashCode;
+            return this.GetHashCodeForObject(GetTracks, UserId, Username);
         }
 
         private bool Equals(PlaylistsRepositoryIdDelegate item)
         {
-            var equals = item != null && this == item;
-
-            return equals;
+            return item != null && this == item;
         }
 
         #endregion HashCode and Equality Overrides

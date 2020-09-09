@@ -456,7 +456,14 @@ namespace Resonance.SubsonicCompat.Controllers
 
                         var zipFileName = $"{artistName}{albumMediaBundle.Media.Name}.zip";
 
-                        return File(CompressionExtensions.CompressFilesToZipArchiveStream(albumMediaBundle.Media.Tracks.Select(t => t.Media.Path), CompressionLevel.NoCompression), "application/zip", zipFileName);
+                        var paths = albumMediaBundle.Media.Tracks.Select(t => t.Media.Path);
+
+                        if (paths.Any(p => !System.IO.File.Exists(p)))
+                        {
+                            return StatusCode(404);
+                        }
+
+                        return File(CompressionExtensions.CompressFilesToZipArchiveStream(paths, CompressionLevel.NoCompression), "application/zip", zipFileName);
                     }
                     break;
 
@@ -469,6 +476,11 @@ namespace Resonance.SubsonicCompat.Controllers
                     {
                         var track = trackMediaBundle.Media;
                         var path = track.Path;
+
+                        if (!System.IO.File.Exists(path))
+                        {
+                            return StatusCode(404);
+                        }
 
                         return File(System.IO.File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read), MimeType.GetMimeType(path), Path.GetFileName(path));
                     }
@@ -626,8 +638,6 @@ namespace Resonance.SubsonicCompat.Controllers
             }
 
             var albumMediaBundles = await GetAlbumListInternalAsync(userId, type, size, offset, fromYear, toYear, genre, musicFolderId, cancellationToken).ConfigureAwait(false);
-
-            cancellationToken.ThrowIfCancellationRequested();
 
             var children = albumMediaBundles.Select(albumMediaBundle => albumMediaBundle.ToSubsonicAlbumId3()).ToList();
 
@@ -906,7 +916,7 @@ namespace Resonance.SubsonicCompat.Controllers
         [ServiceFilter(typeof(SubsonicAsyncAuthorizationFilter))]
         public async Task<ActionResult> GetAvatarAsync([ResonanceParameter] string user, CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
 
             var authorizationContext = ControllerContext.GetAuthorizationContext();
 
@@ -981,14 +991,14 @@ namespace Resonance.SubsonicCompat.Controllers
             }
 
             var userId = authorizationContext.User.Id;
-            byte[] coverArtData = null;
+            ReadOnlyMemory<byte> coverArtData = null;
             string contentType = null;
 
             Data.Models.MediaType? mediaType = null;
 
             if (Guid.TryParse(id, out var mediaId))
             {
-                mediaType = await MetadataRepository.GetMediaTypeAsync(mediaId, cancellationToken);
+                mediaType = await MetadataRepository.GetMediaTypeAsync(mediaId, cancellationToken).ConfigureAwait(false);
             }
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -1019,7 +1029,7 @@ namespace Resonance.SubsonicCompat.Controllers
                     return StatusCode(404);
                 }
 
-                id = album.Media.Tracks.FirstOrDefault().Media.Id.ToString("n");
+                id = album.Media.Tracks.FirstOrDefault()?.Media.Id.ToString("n");
             }
             else if (id.StartsWith("ar-") || mediaType == Data.Models.MediaType.Artist)
             {
@@ -1032,13 +1042,13 @@ namespace Resonance.SubsonicCompat.Controllers
                     return StatusCode(404);
                 }
 
-                var artistInfo = await MediaLibrary.GetArtistInfoAsync(artist.Media, cancellationToken);
+                var artistInfo = await MediaLibrary.GetArtistInfoAsync(artist.Media, cancellationToken).ConfigureAwait(false);
 
                 if (artistInfo?.LastFm?.LargestImageUrl != null)
                 {
-                    coverArtData = await HttpClient.GetByteArrayAsync(artistInfo.LastFm.LargestImageUrl);
+                    coverArtData = await HttpClient.GetByteArrayAsync(artistInfo.LastFm.LargestImageUrl).ConfigureAwait(false);
 
-                    if (coverArtData == null)
+                    if (coverArtData.IsEmpty)
                     {
                         return StatusCode(404);
                     }
@@ -1053,7 +1063,7 @@ namespace Resonance.SubsonicCompat.Controllers
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (coverArtData == null)
+            if (coverArtData.IsEmpty)
             {
                 var trackId = new Guid(id);
 
@@ -1064,11 +1074,11 @@ namespace Resonance.SubsonicCompat.Controllers
                     return new StatusCodeResult(404);
                 }
 
-                coverArtData = coverArt.CoverArtData;
+                coverArtData = coverArt.CoverArtData.ToArray();
                 contentType = coverArt.MimeType;
             }
 
-            return File(coverArtData, contentType);
+            return File(coverArtData.ToArray(), contentType);
         }
 
         [HttpGet("getGenres.view"), HttpPost("getGenres.view")]
@@ -1110,8 +1120,6 @@ namespace Resonance.SubsonicCompat.Controllers
 
             var artists = await MediaLibrary.GetArtistsAsync(userId, musicFolderId, cancellationToken).ConfigureAwait(false);
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             var indexDictionary = new Dictionary<char, List<Subsonic.Common.Classes.Artist>>();
 
             var indexes = new Indexes { Items = new List<Subsonic.Common.Classes.Index>() };
@@ -1128,11 +1136,9 @@ namespace Resonance.SubsonicCompat.Controllers
 
             foreach (var artist in artists)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
                 var subsonicArtist = artist.ToSubsonicArtist();
 
-                var firstChar = artist.Media.Name.ToUpperInvariant().First();
+                var firstChar = artist.Media.Name.ToUpperInvariant()[0];
                 var indexKey = firstChar;
 
                 if (!IndexRegex.IsMatch(firstChar.ToString()))
@@ -1152,8 +1158,6 @@ namespace Resonance.SubsonicCompat.Controllers
 
             foreach (var key in indexDictionary.Keys.OrderBy(k => k))
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
                 var index = new Subsonic.Common.Classes.Index
                 {
                     Name = key.ToString(),
@@ -1193,7 +1197,7 @@ namespace Resonance.SubsonicCompat.Controllers
         [ServiceFilter(typeof(SubsonicAsyncResultFilter))]
         public async Task<Response> GetLicense(CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
 
             var authorizationContext = ControllerContext.GetAuthorizationContext();
 
@@ -1232,8 +1236,6 @@ namespace Resonance.SubsonicCompat.Controllers
                 return SubsonicControllerExtensions.CreateFailureResponse(ErrorCode.RequestedDataNotFound, SubsonicConstants.DirectoryNotFound);
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             var directory = new Subsonic.Common.Classes.Directory { Id = id.ToString("n") };
 
             switch (mediaType)
@@ -1246,8 +1248,6 @@ namespace Resonance.SubsonicCompat.Controllers
                         return SubsonicControllerExtensions.CreateFailureResponse(ErrorCode.RequestedDataNotFound, SubsonicConstants.DirectoryNotFound);
                     }
 
-                    cancellationToken.ThrowIfCancellationRequested();
-
                     var albumMediaBundles = await MediaLibrary.GetAlbumsByArtistAsync(userId, id, true, cancellationToken).ConfigureAwait(false);
 
                     if (albumMediaBundles?.Any() != true)
@@ -1255,16 +1255,12 @@ namespace Resonance.SubsonicCompat.Controllers
                         return SubsonicControllerExtensions.CreateFailureResponse(ErrorCode.RequestedDataNotFound, SubsonicConstants.DirectoryNotFound);
                     }
 
-                    cancellationToken.ThrowIfCancellationRequested();
-
                     directory.Name = artistMediaBundle.Media.Name;
 
                     directory.Children = new List<Child>();
 
                     foreach (var album in albumMediaBundles)
                     {
-                        cancellationToken.ThrowIfCancellationRequested();
-
                         directory.Children.Add(album.ToSubsonicChild());
                     }
                     break;
@@ -1277,16 +1273,12 @@ namespace Resonance.SubsonicCompat.Controllers
                         return SubsonicControllerExtensions.CreateFailureResponse(ErrorCode.RequestedDataNotFound, SubsonicConstants.DirectoryNotFound);
                     }
 
-                    cancellationToken.ThrowIfCancellationRequested();
-
                     directory.Name = albumMediaBundle.Media.Name;
 
                     directory.Children = new List<Child>();
 
                     foreach (var track in albumMediaBundle.Media.Tracks)
                     {
-                        cancellationToken.ThrowIfCancellationRequested();
-
                         directory.Children.Add(track.ToSubsonicSong(albumMediaBundle));
                     }
 
@@ -1341,8 +1333,6 @@ namespace Resonance.SubsonicCompat.Controllers
 
             var recentPlayback = await MetadataRepository.GetRecentPlaybackAsync(userId, true, cancellationToken).ConfigureAwait(false);
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             var nowPlaying = new NowPlaying { Entries = new List<NowPlayingEntry>() };
 
             var users = new Dictionary<Guid, Data.Models.User>();
@@ -1389,8 +1379,6 @@ namespace Resonance.SubsonicCompat.Controllers
 
             var playlist = await MediaLibrary.GetPlaylistAsync(userId, id, true, cancellationToken).ConfigureAwait(false);
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             var subsonicPlaylist = playlist.ToSubsonicPlaylistWithSongs();
 
             if (playlist?.Tracks?.Any() == true)
@@ -1399,8 +1387,6 @@ namespace Resonance.SubsonicCompat.Controllers
 
                 foreach (var track in playlist.Tracks)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
                     subsonicPlaylist.Entries.Add(track.ToSubsonicSong(await MediaLibrary.GetAlbumAsync(userId, track.Media.AlbumId, false, cancellationToken).ConfigureAwait(false)));
                 }
             }
@@ -1423,8 +1409,6 @@ namespace Resonance.SubsonicCompat.Controllers
             var userId = authorizationContext.User.Id;
 
             var playlistResults = await MediaLibrary.GetPlaylistsAsync(userId, username, true, cancellationToken).ConfigureAwait(false);
-
-            cancellationToken.ThrowIfCancellationRequested();
 
             var playlists = new Playlists { Items = new List<Subsonic.Common.Classes.Playlist>() };
 
@@ -1460,7 +1444,7 @@ namespace Resonance.SubsonicCompat.Controllers
         [ServiceFilter(typeof(SubsonicAsyncResultFilter))]
         public async Task<Response> GetPodcasts(CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
 
             var authorizationContext = ControllerContext.GetAuthorizationContext();
 
@@ -1492,8 +1476,6 @@ namespace Resonance.SubsonicCompat.Controllers
 
             var trackMediaBundles = await MediaLibrary.GetTracksAsync(userId, size.Value, 0, genre, fromYear, toYear, musicFolderId, true, true, cancellationToken).ConfigureAwait(false);
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             var subsonicSongs = new RandomSongs { Songs = new List<Child>() };
 
             foreach (var trackMediaBundle in trackMediaBundles)
@@ -1510,15 +1492,13 @@ namespace Resonance.SubsonicCompat.Controllers
         [HttpGet("getScanStatus.view"), HttpPost("getScanStatus.view")]
         [ServiceFilter(typeof(SubsonicAsyncAuthorizationFilter))]
         [ServiceFilter(typeof(SubsonicAsyncResultFilter))]
-        public async Task<Response> GetScanStatusAsync(CancellationToken cancellationToken)
+        public Task<Response> GetScanStatusAsync(CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
-
             var authorizationContext = ControllerContext.GetAuthorizationContext();
 
             if (!authorizationContext.IsAuthorized)
             {
-                return authorizationContext.CreateAuthorizationFailureResponse();
+                return Task.FromResult(authorizationContext.CreateAuthorizationFailureResponse());
             }
 
             var scanProgress = MediaLibrary.ScanProgress;
@@ -1535,7 +1515,7 @@ namespace Resonance.SubsonicCompat.Controllers
                 scanStatus.Count = scanProgress.CurrentFile;
             }
 
-            return SubsonicControllerExtensions.CreateResponse(ItemChoiceType.ScanStatus, scanStatus);
+            return Task.FromResult(SubsonicControllerExtensions.CreateResponse(ItemChoiceType.ScanStatus, scanStatus));
         }
 
         [HttpGet("getSimilarSongs2.view"), HttpPost("getSimilarSongs2.view")]
@@ -1615,8 +1595,6 @@ namespace Resonance.SubsonicCompat.Controllers
                 return SubsonicControllerExtensions.CreateFailureResponse(ErrorCode.RequestedDataNotFound, SubsonicConstants.SongNotFound);
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             var subsonicSong = trackMediaBundle.ToSubsonicSong(await MediaLibrary.GetAlbumAsync(userId, trackMediaBundle.Media.AlbumId, false, cancellationToken).ConfigureAwait(false));
 
             return SubsonicControllerExtensions.CreateResponse(ItemChoiceType.Song, subsonicSong);
@@ -1639,8 +1617,6 @@ namespace Resonance.SubsonicCompat.Controllers
             count = SetBounds(count, 10, 500);
 
             var trackMediaBundles = await MediaLibrary.GetTracksAsync(userId, count.GetValueOrDefault(), offset.GetValueOrDefault(), genre, null, null, musicFolderId, true, false, cancellationToken).ConfigureAwait(false);
-
-            cancellationToken.ThrowIfCancellationRequested();
 
             var subsonicSongs = new SongsByGenre { Songs = new List<Child>() };
 
@@ -1669,12 +1645,15 @@ namespace Resonance.SubsonicCompat.Controllers
 
             var userId = authorizationContext.User.Id;
 
-            var artists = await MetadataRepository.GetFavoritedAsync<Data.Models.Artist>(userId, collectionId, true, cancellationToken).ConfigureAwait(false);
-            cancellationToken.ThrowIfCancellationRequested();
-            var albums = await MetadataRepository.GetFavoritedAsync<Album>(userId, collectionId, true, cancellationToken).ConfigureAwait(false);
-            cancellationToken.ThrowIfCancellationRequested();
-            var tracks = await MetadataRepository.GetFavoritedAsync<Track>(userId, collectionId, true, cancellationToken).ConfigureAwait(false);
-            cancellationToken.ThrowIfCancellationRequested();
+            var artistsTask = MetadataRepository.GetFavoritedAsync<Data.Models.Artist>(userId, collectionId, true, cancellationToken);
+            var albumsTask = MetadataRepository.GetFavoritedAsync<Album>(userId, collectionId, true, cancellationToken);
+            var tracksTask = MetadataRepository.GetFavoritedAsync<Track>(userId, collectionId, true, cancellationToken);
+
+            await Task.WhenAll(artistsTask, albumsTask, tracksTask).ConfigureAwait(false);
+
+            var artists = artistsTask.Result;
+            var albums = albumsTask.Result;
+            var tracks = tracksTask.Result;
 
             var starred = new Starred2();
 
@@ -1714,12 +1693,15 @@ namespace Resonance.SubsonicCompat.Controllers
 
             var userId = authorizationContext.User.Id;
 
-            var artists = await MetadataRepository.GetFavoritedAsync<Data.Models.Artist>(userId, collectionId, true, cancellationToken).ConfigureAwait(false);
-            cancellationToken.ThrowIfCancellationRequested();
-            var albums = await MetadataRepository.GetFavoritedAsync<Album>(userId, collectionId, true, cancellationToken).ConfigureAwait(false);
-            cancellationToken.ThrowIfCancellationRequested();
-            var tracks = await MetadataRepository.GetFavoritedAsync<Track>(userId, collectionId, true, cancellationToken).ConfigureAwait(false);
-            cancellationToken.ThrowIfCancellationRequested();
+            var artistsTask = MetadataRepository.GetFavoritedAsync<Data.Models.Artist>(userId, collectionId, true, cancellationToken);
+            var albumsTask = MetadataRepository.GetFavoritedAsync<Album>(userId, collectionId, true, cancellationToken);
+            var tracksTask = MetadataRepository.GetFavoritedAsync<Track>(userId, collectionId, true, cancellationToken);
+
+            await Task.WhenAll(artistsTask, albumsTask, tracksTask).ConfigureAwait(false);
+
+            var artists = artistsTask.Result;
+            var albums = albumsTask.Result;
+            var tracks = tracksTask.Result;
 
             var starred = new Starred();
 
@@ -1765,8 +1747,6 @@ namespace Resonance.SubsonicCompat.Controllers
 
             var topTracks = await MediaLibrary.GetTopTracksAsync(artist, count.Value, cancellationToken).ConfigureAwait(false);
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             foreach (var topTrack in topTracks)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -1775,8 +1755,6 @@ namespace Resonance.SubsonicCompat.Controllers
 
                 if (trackModel != null)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
                     var subsonicSong = trackModel.ToSubsonicSong(await MediaLibrary.GetAlbumAsync(userId, trackModel.Media.AlbumId, false, cancellationToken).ConfigureAwait(false));
                     topSongs.Songs.Add(subsonicSong);
                 }
@@ -1864,7 +1842,7 @@ namespace Resonance.SubsonicCompat.Controllers
         [ServiceFilter(typeof(SubsonicAsyncResultFilter))]
         public async Task<Response> GetVideoInfo([ResonanceParameter] Guid id, CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
 
             var authorizationContext = ControllerContext.GetAuthorizationContext();
 
@@ -1882,7 +1860,7 @@ namespace Resonance.SubsonicCompat.Controllers
         [ServiceFilter(typeof(SubsonicAsyncResultFilter))]
         public async Task<Response> GetVideos(CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
 
             var authorizationContext = ControllerContext.GetAuthorizationContext();
 
@@ -1938,18 +1916,16 @@ namespace Resonance.SubsonicCompat.Controllers
         [HttpGet("ping.view"), HttpPost("ping.view")]
         [ServiceFilter(typeof(SubsonicAsyncAuthorizationFilter))]
         [ServiceFilter(typeof(SubsonicAsyncResultFilter))]
-        public async Task<Response> PingAsync(CancellationToken cancellationToken)
+        public Task<Response> PingAsync(CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
-
             var authorizationContext = ControllerContext.GetAuthorizationContext();
 
             if (!authorizationContext.IsAuthorized)
             {
-                return authorizationContext.CreateAuthorizationFailureResponse();
+                return Task.FromResult(authorizationContext.CreateAuthorizationFailureResponse());
             }
 
-            return SubsonicControllerExtensions.DefaultResponse;
+            return Task.FromResult(SubsonicControllerExtensions.DefaultResponse);
         }
 
         [HttpGet("savePlayQueue.view"), HttpPost("savePlayQueue.view")]
@@ -2037,7 +2013,7 @@ namespace Resonance.SubsonicCompat.Controllers
         [ServiceFilter(typeof(SubsonicAsyncResultFilter))]
         public async Task<Response> Search([ResonanceParameter] string artist, [ResonanceParameter] string album, [ResonanceParameter] string title, [ResonanceParameter] string any, [ResonanceParameter] int? count, [ResonanceParameter] int? offset, [ResonanceParameter] long? newerThan, CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
 
             var authorizationContext = ControllerContext.GetAuthorizationContext();
 
@@ -2099,15 +2075,11 @@ namespace Resonance.SubsonicCompat.Controllers
                 tasks.Add(artistsSearchTask);
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             if (albumCount > 0)
             {
                 albumSearchTask = MediaLibrary.SearchAlbumsAsync(userId, query, albumCount.GetValueOrDefault(), albumOffset.GetValueOrDefault(), musicFolderId, true, cancellationToken);
                 tasks.Add(albumSearchTask);
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
 
             if (songCount > 0)
             {
@@ -2115,7 +2087,7 @@ namespace Resonance.SubsonicCompat.Controllers
                 tasks.Add(trackSearchTask);
             }
 
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
 
             if (artistsSearchTask?.Status == TaskStatus.RanToCompletion)
             {
@@ -2132,8 +2104,6 @@ namespace Resonance.SubsonicCompat.Controllers
                 tracks = trackSearchTask.Result;
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             var searchResult2 = new SearchResult2();
 
             if (artists != null)
@@ -2141,14 +2111,10 @@ namespace Resonance.SubsonicCompat.Controllers
                 searchResult2.Artists = artists.Select(a => a.ToSubsonicArtist()).ToList();
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             if (albums != null)
             {
                 searchResult2.Albums = albums.Select(a => a.ToSubsonicChild()).ToList();
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
 
             if (tracks != null)
             {
@@ -2207,15 +2173,11 @@ namespace Resonance.SubsonicCompat.Controllers
                 tasks.Add(artistsSearchTask);
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             if (albumCount > 0)
             {
                 albumSearchTask = MediaLibrary.SearchAlbumsAsync(userId, query, albumCount.GetValueOrDefault(), albumOffset.GetValueOrDefault(), musicFolderId, true, cancellationToken);
                 tasks.Add(albumSearchTask);
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
 
             if (songCount > 0)
             {
@@ -2223,7 +2185,7 @@ namespace Resonance.SubsonicCompat.Controllers
                 tasks.Add(trackSearchTask);
             }
 
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
 
             if (artistsSearchTask?.Status == TaskStatus.RanToCompletion)
             {
@@ -2240,8 +2202,6 @@ namespace Resonance.SubsonicCompat.Controllers
                 tracks = trackSearchTask.Result;
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             var searchResult3 = new SearchResult3();
 
             if (artists != null)
@@ -2249,14 +2209,10 @@ namespace Resonance.SubsonicCompat.Controllers
                 searchResult3.Artists = artists.Select(a => a.ToSubsonicArtistId3()).ToList();
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             if (albums != null)
             {
                 searchResult3.Albums = albums.Select(a => a.ToSubsonicAlbumId3()).ToList();
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
 
             if (tracks != null)
             {
@@ -2356,7 +2312,7 @@ namespace Resonance.SubsonicCompat.Controllers
         [Authorize(Policy = PolicyConstants.Administration)]
         public async Task<Response> StartScanAsync(CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
 
             var authorizationContext = ControllerContext.GetAuthorizationContext();
 
@@ -2543,8 +2499,6 @@ namespace Resonance.SubsonicCompat.Controllers
 
             var playlist = await MetadataRepository.GetPlaylistAsync(userId, playlistId, true, cancellationToken).ConfigureAwait(false);
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             if (!string.IsNullOrWhiteSpace(name))
             {
                 playlist.Name = name;
@@ -2710,48 +2664,39 @@ namespace Resonance.SubsonicCompat.Controllers
             return size.Value;
         }
 
-        private async Task<IEnumerable<MediaBundle<Album>>> GetAlbumListInternalAsync(Guid userId, AlbumListType type, int? size, int? offset, int? fromYear, int? toYear, string genre, Guid? musicFolderId, CancellationToken cancellationToken)
+        private Task<IEnumerable<MediaBundle<Album>>> GetAlbumListInternalAsync(Guid userId, AlbumListType type, int? size, int? offset, int? fromYear, int? toYear, string genre, Guid? musicFolderId, CancellationToken cancellationToken)
         {
-            IEnumerable<MediaBundle<Album>> albumMediaBundles = new List<MediaBundle<Album>>();
-
             switch (type)
             {
                 case AlbumListType.ByYear:
                 case AlbumListType.ByGenre:
                 case AlbumListType.AlphabeticalByName:
-                    albumMediaBundles = await MetadataRepository.GetAlphabeticalAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken).ConfigureAwait(false);
-                    break;
+                    return MetadataRepository.GetAlphabeticalAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken);
 
                 case AlbumListType.Random:
-                    albumMediaBundles = await MediaLibrary.GetRandomAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken).ConfigureAwait(false);
-                    break;
+                    return MediaLibrary.GetRandomAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken);
 
                 case AlbumListType.Newest:
-                    albumMediaBundles = await MediaLibrary.GetNewestAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken).ConfigureAwait(false);
-                    break;
+                    return MediaLibrary.GetNewestAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken);
 
                 case AlbumListType.Starred:
-                    albumMediaBundles = await MediaLibrary.GetFavoritedAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken).ConfigureAwait(false);
-                    break;
+                    return MediaLibrary.GetFavoritedAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken);
 
                 case AlbumListType.AlphabeticalByArtist:
-                    albumMediaBundles = await MetadataRepository.GetAlphabeticalByArtistAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken).ConfigureAwait(false);
-                    break;
+                    return MetadataRepository.GetAlphabeticalByArtistAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken);
 
                 case AlbumListType.Highest:
-                    albumMediaBundles = await MediaLibrary.GetHighestRatedAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken).ConfigureAwait(false);
-                    break;
+                    return MediaLibrary.GetHighestRatedAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken);
 
                 case AlbumListType.Frequent:
-                    albumMediaBundles = await MetadataRepository.GetMostPlayedAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken).ConfigureAwait(false);
-                    break;
+                    return MetadataRepository.GetMostPlayedAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken);
 
                 case AlbumListType.Recent:
-                    albumMediaBundles = await MetadataRepository.GetMostRecentlyPlayedAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken).ConfigureAwait(false);
-                    break;
-            }
+                    return MetadataRepository.GetMostRecentlyPlayedAlbumsAsync(userId, size.GetValueOrDefault(), offset.GetValueOrDefault(), genre, fromYear, toYear, musicFolderId, true, cancellationToken);
 
-            return albumMediaBundles;
+                default:
+                    throw new ArgumentException($"Invalid album list type provided.", nameof(type));
+            }
         }
 
         private async Task SetDipositionCollectionIdAsync(Disposition disposition, Guid id, Guid userId, CancellationToken cancellationToken)

@@ -116,6 +116,7 @@ namespace Resonance.SubsonicCompat
 
             subsonicArtist.Name = artist.Name;
             subsonicArtist.Id = artist.Id.ToString("n");
+            subsonicArtist.ArtistImageUrl = artist.ImageUrl;
 
             var disposition = artistMediaBundle.Dispositions.FirstOrDefault();
 
@@ -143,6 +144,7 @@ namespace Resonance.SubsonicCompat
             subsonicArtist.Name = artist.Name;
             subsonicArtist.Id = artist.Id.ToString("n");
             subsonicArtist.CoverArt = $"ar-{subsonicArtist.Id}";
+            subsonicArtist.ArtistImageUrl = artist.ImageUrl;
 
             var disposition = artistMediaBundle.Dispositions.FirstOrDefault();
 
@@ -163,6 +165,7 @@ namespace Resonance.SubsonicCompat
             subsonicArtist.Name = artist.Name;
             subsonicArtist.Id = artist.Id.ToString("n");
             subsonicArtist.CoverArt = $"ar-{subsonicArtist.Id}";
+            subsonicArtist.ArtistImageUrl = artist.ImageUrl;
 
             var disposition = artistMediaBundle.Dispositions.FirstOrDefault();
 
@@ -171,7 +174,7 @@ namespace Resonance.SubsonicCompat
                 subsonicArtist.Starred = disposition.Favorited.Value;
             }
 
-            var subsonicArtistAlbums = albumMediaBundles.Select(a => a.ToSubsonicAlbumId3()).AsParallel().ToList();
+            var subsonicArtistAlbums = albumMediaBundles.Select(ToSubsonicAlbumId3).AsParallel().ToList();
 
             subsonicArtist.Albums = subsonicArtistAlbums;
             subsonicArtist.AlbumCount = subsonicArtistAlbums.Count;
@@ -243,7 +246,7 @@ namespace Resonance.SubsonicCompat
                 subsonicChild.Parent = subsonicChild.ArtistId;
             }
 
-            if (album.Tracks != null)
+            if (album.Tracks?.Count > 0)
             {
                 subsonicChild.CoverArt = album.Tracks.First().Media.Id.ToString("n");
                 subsonicChild.Year = album.Tracks.First().Media.ReleaseDate;
@@ -432,8 +435,7 @@ namespace Resonance.SubsonicCompat
                 ChangedBy = playQueue.ClientName,
                 Current = playQueue.CurrentTrackId?.ToString("n"),
                 Position = playQueue.Position ?? 0,
-                Username = playQueue.User.Name,
-                Entries = new List<Child>()
+                Username = playQueue.User.Name
             };
 
             if (playQueue.Tracks == null)

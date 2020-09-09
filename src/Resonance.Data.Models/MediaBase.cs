@@ -18,6 +18,9 @@ namespace Resonance.Data.Models
         [JsonProperty("genres")]
         public virtual HashSet<Genre> Genres { get; set; }
 
+        [JsonProperty("imageUrl")]
+        public string ImageUrl { get; set; }
+
         [JsonProperty("mediaInfo")]
         public MediaInfo MediaInfo { get; set; }
 
